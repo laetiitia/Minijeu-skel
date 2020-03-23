@@ -34,6 +34,19 @@ moveDown gs@(GameState _ py sp) | py < 380 = gs { persoY = py + sp }
 
 
 gameStep :: RealFrac a => GameState -> Keyboard -> a -> GameState
-gameStep gstate kbd deltaTime =
-  -- A MODIFIFIER
-  gstate
+gameStep gstate keyb deltaTime = moveAux gstate keyb deltaTime [KeycodeZ,KeycodeQ,KeycodeS,KeycodeD]
+
+
+moveAux :: RealFrac a => GameState -> Keyboard -> a -> [Keycode] -> GameState 
+moveAux gstate keyb deltaTime (x : []) = if K.keypressed x keyb then moveTo gstate x deltaTime else gstate
+moveAux gstate keyb deltaTime (x : xs) = if K.keypressed x keyb then moveAux (moveTo gstate x deltaTime) keyb deltaTime xs
+                                                                 else moveAux gstate keyb deltaTime xs 
+
+
+moveTo :: RealFrac a => GameState -> Keycode -> a -> GameState
+moveTo gstate KeycodeZ deltaTime = moveUp gstate
+moveTo gstate KeycodeQ deltaTime = moveLeft gstate
+moveTo gstate KeycodeS deltaTime = moveDown gstate
+moveTo gstate KeycodeD deltaTime = moveRight gstate
+moveTo gstate _ _ = gstate
+
