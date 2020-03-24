@@ -46,6 +46,16 @@ loadPerso rdr path tmap smap = do
   let smap' = SM.addSprite (SpriteId "perso") sprite smap
   return (tmap', smap')
 
+loadVirus :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadVirus rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "virus") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "virus") (S.mkArea 0 0 100 100)
+  let smap' = SM.addSprite (SpriteId "virus") sprite smap
+  return (tmap', smap')
+
+
+
+
 main :: IO ()
 main = do
   initializeAll
@@ -55,12 +65,15 @@ main = do
   (tmap, smap) <- loadBackground renderer "assets/background.jpg" TM.createTextureMap SM.createSpriteMap
   -- chargement du personnage
   (tmap', smap') <- loadPerso renderer "assets/perso.png" tmap smap
+  -- chargement du virus
+  (tmap'', smap'') <- loadVirus renderer "assets/virus.png" tmap' smap'
+  
   -- initialisation de l'état du jeu
   let gameState = M.initGameState
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 60 renderer tmap' smap' kbd gameState
+  gameLoop 60 renderer tmap'' smap'' kbd gameState
 
 gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> IO ()
 gameLoop frameRate renderer tmap smap kbd gameState = do
@@ -75,6 +88,9 @@ gameLoop frameRate renderer tmap smap kbd gameState = do
                                  (fromIntegral (M.persoX gameState))
                                  (fromIntegral (M.persoY gameState)))
   ---
+  S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "virus") smap)
+                                 (fromIntegral (M.virusX gameState))
+                                 (fromIntegral (M.virusY gameState)))
   present renderer
   endTime <- time
   let refreshTime = endTime - startTime
