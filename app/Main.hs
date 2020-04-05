@@ -59,18 +59,48 @@ loadPerso rdr path tmap smap = do
   return (tmap', smap')
 
 
-loadMur :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadMur rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "mur") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "mur") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "mur") sprite smap
+loadangleHD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadangleHD rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "angleHD") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleHD") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "angleHD") sprite smap
   return (tmap', smap')
+
+
+loadangleHG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadangleHG rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "angleHG") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleHG") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "angleHG") sprite smap
+  return (tmap', smap') 
+
 
 loadSol :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
 loadSol rdr path tmap smap = do
   tmap' <- TM.loadTexture rdr path (TextureId "sol") tmap
   let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "sol") (S.mkArea 0 0 50 50)
   let smap' = SM.addSprite (SpriteId "sol") sprite smap
+  return (tmap', smap')
+
+loadHorizontal :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadHorizontal rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "Horizontal") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "Horizontal") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "Horizontal") sprite smap
+  return (tmap', smap')
+
+loadVerticalD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadVerticalD rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "VerticalD") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "VerticalD") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "VerticalD") sprite smap
+  return (tmap', smap')
+
+loadVerticalG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadVerticalG rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "VerticalG") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "VerticalG") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "VerticalG") sprite smap
   return (tmap', smap')
 
 -------------------------------------------
@@ -101,9 +131,13 @@ main = do
   (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du personnage
   (tmap', smap') <- loadPerso renderer "assets/perso.png" tmap smap
-  -- chargement du mur et sol
-  (tmap2, smap2) <- loadMur renderer "assets/mur.png" tmap' smap'
-  (tmap3, smap3) <- loadSol renderer "assets/sol.png" tmap2 smap2
+  -- chargement du virus
+  (tmap4, smap4) <- loadangleHD renderer "assets/texture/angleHD.png" tmap' smap'
+  (tmap5, smap5) <- loadangleHG renderer "assets/texture/angleHG.png" tmap4 smap4
+  (tmap6, smap6) <- loadSol renderer "assets/texture/sol.png" tmap5 smap5
+  (tmap7, smap7) <- loadHorizontal renderer "assets/texture/Horizontal.png" tmap6 smap6
+  (tmap8, smap8) <- loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
+  (tmap9, smap9) <- loadVerticalG renderer "assets/texture/VerticalG.png" tmap8 smap8
   -- initialisation de l'état du jeu
   -- let gameState = M.initGameState
 
@@ -113,7 +147,7 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 60 renderer tmap3 smap3 kbd carte 
+  gameLoop 60 renderer tmap9 smap9 kbd carte 
 
 
 

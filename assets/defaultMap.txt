@@ -1,7 +1,5 @@
-XXXXXXXXXX
-X        X
-X XXX X  X
-X  @X XXXX
-XXXXX    X
-X     XXXX
-XXXXXXXXXX
+72222229
+4      6
+4      6
+4      6
+22222222

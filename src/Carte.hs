@@ -16,28 +16,39 @@ import qualified SpriteMap as SM
 
 data Case = Vide -- une case vide
   | Perso --id
-  | Mur -- infranchissable (sauf pour les fantomes ...)
+  | AngleHD
+  | AngleHG
+  | Horizontal
+  | VerticalG
+  | VerticalD -- infranchissable (sauf pour les fantomes ...)
   deriving Eq
 
 instance Show Case where
   show c = caseToName c
 
-propCase :: Case -> Bool
-propCase c = (c == Vide ) || (c == Mur) || (c == Perso)
+--propCase :: Case -> Bool
+--propCase c = (c == Vide ) || (c == Mur) || (c == Perso)
 
 associate :: Char -> Case
 associate x = case x of
-  'X' -> Mur
+  '7' -> AngleHG
+  '9' -> AngleHD
+  '2' -> Horizontal
+  '4' -> VerticalG
+  '6' -> VerticalD
   ' ' -> Vide
-  '@' -> Perso
-  otherwise -> Mur
+  'X' -> Perso
+  otherwise -> Vide
 
 caseToName :: Case -> String
 caseToName x = case x of
-   Mur -> "mur"
-   Vide -> "sol"
-   Perso -> "perso"
-
+  AngleHG -> "angleHG"
+  AngleHD -> "angleHD"
+  Horizontal -> "Horizontal"
+  VerticalG -> "VerticalG"
+  VerticalD -> "VerticalD"
+  Vide -> "sol"
+  Perso -> "perso"
 
 ---------------------------------
 ------------ COORD --------------
@@ -70,7 +81,7 @@ data Carte = Carte { cartel :: Int , -- largeur
 -- la hauteur et largeur de la carte par rapport à la fenetre
 -- chaque case existe et que les coordonnées soient correctes
 -- que la carte soit bien entouré de mur
-propCarte ::  Carte -> Bool
+{-propCarte ::  Carte -> Bool
 propCarte (Carte haut larg contenu) = let inv0 = ((0 < haut && haut <= 500 ) && (0 < larg && larg <= 700 )) in
   if not inv0 
     then False
@@ -79,7 +90,7 @@ propCarte (Carte haut larg contenu) = let inv0 = ((0 < haut && haut <= 500 ) && 
         then listAnd list
         else False
         where checkMap (C cx cy) val acc = let inv1 = ((propCoord (C cx cy) haut larg) && (propCase val)) in (if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) then (val == Mur && inv1):acc else inv1:acc)
-
+-}
 
 listAnd :: [Bool] -> Bool
 listAnd [] = True
