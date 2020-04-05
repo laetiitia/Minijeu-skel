@@ -161,6 +161,7 @@ gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> 
 gameLoop frameRate renderer tmap smap kbd gameState = do
   startTime <- time
   events <- pollEvents
+  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
   let kbd' = K.handleEvents events kbd
   clear renderer
   --- display background
@@ -187,4 +188,4 @@ gameLoop frameRate renderer tmap smap kbd gameState = do
   --- update du game state
   let gameState' = M.gameStep gameState kbd' deltaTime
   ---}
-  unless (K.keypressed KeycodeEscape kbd') (gameLoop frameRate renderer tmap smap kbd' gameState)
+  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap kbd' gameState)

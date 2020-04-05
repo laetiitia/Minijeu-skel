@@ -26,8 +26,8 @@ data Case = Vide -- une case vide
 instance Show Case where
   show c = caseToName c
 
---propCase :: Case -> Bool
---propCase c = (c == Vide ) || (c == Mur) || (c == Perso)
+propCase :: Case -> Bool
+propCase c = (c == Vide ) || (c == Perso) || (c == AngleHD) || (c == AngleHG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
 
 associate :: Char -> Case
 associate x = case x of
@@ -49,6 +49,9 @@ caseToName x = case x of
   VerticalD -> "VerticalD"
   Vide -> "sol"
   Perso -> "perso"
+
+isMur :: Case -> Bool
+isMur c = (c == AngleHD) || (c == AngleHG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
 
 ---------------------------------
 ------------ COORD --------------
@@ -81,7 +84,7 @@ data Carte = Carte { cartel :: Int , -- largeur
 -- la hauteur et largeur de la carte par rapport à la fenetre
 -- chaque case existe et que les coordonnées soient correctes
 -- que la carte soit bien entouré de mur
-{-propCarte ::  Carte -> Bool
+propCarte ::  Carte -> Bool
 propCarte (Carte haut larg contenu) = let inv0 = ((0 < haut && haut <= 500 ) && (0 < larg && larg <= 700 )) in
   if not inv0 
     then False
@@ -89,8 +92,8 @@ propCarte (Carte haut larg contenu) = let inv0 = ((0 < haut && haut <= 500 ) && 
       if (length list) == ((haut `div` 50) * (larg `div` 50)) 
         then listAnd list
         else False
-        where checkMap (C cx cy) val acc = let inv1 = ((propCoord (C cx cy) haut larg) && (propCase val)) in (if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) then (val == Mur && inv1):acc else inv1:acc)
--}
+        where checkMap (C cx cy) val acc = let inv1 = ((propCoord (C cx cy) haut larg) && (propCase val)) in (if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) then ((isMur val) && inv1):acc else inv1:acc)
+
 
 listAnd :: [Bool] -> Bool
 listAnd [] = True
