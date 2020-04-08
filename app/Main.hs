@@ -146,7 +146,7 @@ main = do
   -- let gameState = M.initGameState
 
   map <- readFile "assets/defaultMap.txt"
-  let carte = Carte.readCarte 500 350 map
+  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte x y map
 
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
