@@ -43,10 +43,14 @@ import qualified Carte as Carte
 --------------- LOAD SPRITE ----------------
 --------------------------------------------
 
+--------------------------------------------
+--------------- LOAD SPRITE ----------------
+--------------------------------------------
+
 loadBackground :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
 loadBackground rdr path tmap smap = do
   tmap' <- TM.loadTexture rdr path (TextureId "background") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "background") (S.mkArea 0 0 1050 750)
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "background") (S.mkArea 0 0 700 500)
   let smap' = SM.addSprite (SpriteId "background") sprite smap
   return (tmap', smap')
 
@@ -125,12 +129,12 @@ affichageMap ((coord,cases):tail) renderer tmap smap = do
 main :: IO ()
 main = do
   initializeAll
-  window <- createWindow "Dungeon Crawling" $ defaultWindow { windowInitialSize = V2 1050 750 }
+  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
   renderer <- createRenderer window (-1) defaultRenderer
   -- chargement de l'image du fond
-  -- (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
+  (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du personnage
-  (tmap', smap') <- loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
+  (tmap', smap') <- loadPerso renderer "assets/perso.png" tmap smap
   -- chargement du virus
   (tmap4, smap4) <- loadangleHD renderer "assets/texture/angleHD.png" tmap' smap'
   (tmap5, smap5) <- loadangleHG renderer "assets/texture/angleHG.png" tmap4 smap4
@@ -142,41 +146,49 @@ main = do
   -- let gameState = M.initGameState
 
   map <- readFile "assets/defaultMap.txt"
-  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte x y map
+  let carte = Carte.readCarte 500 350 map
 
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 60 renderer tmap9 smap9 kbd carte 
+  gameLoop 10 renderer tmap9 smap9 kbd (M.initGameState carte) 
 
 
 
+affichagePerso :: Int -> Int -> Renderer -> TextureMap -> SpriteMap -> IO()
+affichagePerso x y renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
+                                  (fromIntegral x)
+                                  (fromIntegral y))
 
+------------------------------------------- 
+refresh::[Event] -> Keyboard -> Keyboard
+refresh [] kbd = kbd
+refresh events kbd = K.handleEvent (head events) kbd
 
--------------------------------------------
 ---------------- GAMELOOP------------------
 -------------------------------------------
 
-gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> Carte -> IO ()
-gameLoop frameRate renderer tmap smap kbd gameState = do
+gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> IO ()
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp carte)= do
   startTime <- time
-  events <- pollEvents
+  events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
-  let kbd' = K.handleEvents events kbd
+  let kbd' = refresh events kbd
   clear renderer
   --- display background
-  --S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
+  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
 
-  --- display perso 
- {- S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
-                                 (fromIntegral (M.persoX gameState))
-                                 (fromIntegral (M.persoY gameState))) -}
+  -- display perso 
+  S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
+                                 (fromIntegral x)
+                                 (fromIntegral y))
   ---
   
-  affichageMap (Map.toList (Carte.carte_contenu gameState)) renderer tmap smap 
+  affichageMap (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
+  affichagePerso x y renderer tmap smap 
   present renderer
 
-  {-
+  
   endTime <- time
   let refreshTime = endTime - startTime
   let delayTime = floor (((1.0 / frameRate) - refreshTime) * 1000)
@@ -187,5 +199,5 @@ gameLoop frameRate renderer tmap smap kbd gameState = do
   -- putStrLn $ "Frame rate: " <> (show (1 / deltaTime)) <> " (frame/s)"
   --- update du game state
   let gameState' = M.gameStep gameState kbd' deltaTime
-  ---}
-  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap kbd' gameState)
+  
+  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap kbd' gameState')

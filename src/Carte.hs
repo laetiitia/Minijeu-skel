@@ -9,7 +9,6 @@ import qualified Data.Map.Strict as M
 import SpriteMap (SpriteMap, SpriteId (..))
 import qualified SpriteMap as SM
 
-
 ---------------------------------
 ------------- CASE --------------
 ---------------------------------
@@ -111,8 +110,9 @@ initMapFromFile (head:tail) (C x y) acc = if head == '\n'
 readCarte :: Int -> Int -> String -> Carte
 readCarte x y txt = Carte x y (initMapFromFile txt (C 0 0) M.empty)
 
-getFormat :: String -> (Int, Int)
-getFormat str = let list = lines str in (maximum (map (\x -> length x) list), length list) 
+
+
+
 
 
 
