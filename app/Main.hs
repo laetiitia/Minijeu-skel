@@ -46,7 +46,7 @@ import qualified Carte as Carte
 loadBackground :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
 loadBackground rdr path tmap smap = do
   tmap' <- TM.loadTexture rdr path (TextureId "background") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "background") (S.mkArea 0 0 700 500)
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "background") (S.mkArea 0 0 1050 750)
   let smap' = SM.addSprite (SpriteId "background") sprite smap
   return (tmap', smap')
 
@@ -125,12 +125,12 @@ affichageMap ((coord,cases):tail) renderer tmap smap = do
 main :: IO ()
 main = do
   initializeAll
-  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
+  window <- createWindow "Dungeon Crawling" $ defaultWindow { windowInitialSize = V2 1050 750 }
   renderer <- createRenderer window (-1) defaultRenderer
   -- chargement de l'image du fond
-  (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
+  -- (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du personnage
-  (tmap', smap') <- loadPerso renderer "assets/perso.png" tmap smap
+  (tmap', smap') <- loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du virus
   (tmap4, smap4) <- loadangleHD renderer "assets/texture/angleHD.png" tmap' smap'
   (tmap5, smap5) <- loadangleHG renderer "assets/texture/angleHG.png" tmap4 smap4
@@ -142,7 +142,7 @@ main = do
   -- let gameState = M.initGameState
 
   map <- readFile "assets/defaultMap.txt"
-  let carte = Carte.readCarte 500 350 map
+  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte x y map
 
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
@@ -165,7 +165,7 @@ gameLoop frameRate renderer tmap smap kbd gameState = do
   let kbd' = K.handleEvents events kbd
   clear renderer
   --- display background
-  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
+  --S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
 
   --- display perso 
  {- S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
