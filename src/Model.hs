@@ -24,7 +24,7 @@ testeCoord x y map = case M.lookup (C.C x y) map of
 
 
 initGameState :: Carte -> GameState
-initGameState carte = GameState 50 50 50 carte
+initGameState carte = GameState 350 250 50 carte
 
 moveLeft :: GameState -> GameState
 moveLeft gs@(GameState px py sp (C.Carte l h contenue)) | px > 0 && (testeCoord (px - sp) py contenue) = gs { persoX = px - sp }

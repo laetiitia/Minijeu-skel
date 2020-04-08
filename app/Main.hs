@@ -110,16 +110,16 @@ loadVerticalG rdr path tmap smap = do
 -------------------------------------------
 ---------------- AFFICHAGE ----------------
 -------------------------------------------
-affichage :: Coord -> Carte.Case -> SpriteMap ->Sprite
-affichage (Carte.C x y) cases smap = (S.moveTo (SM.fetchSprite (SpriteId (Carte.caseToName cases)) smap)
-                                  (fromIntegral (x))
-                                  (fromIntegral y))
+affichage ::Int -> Int -> Coord -> Carte.Case -> SpriteMap ->Sprite
+affichage x2 y2 (Carte.C x y) cases smap = (S.moveTo (SM.fetchSprite (SpriteId (Carte.caseToName cases)) smap)
+                                  (fromIntegral (x-x2+350))
+                                  (fromIntegral (y-y2+250)))
 
-affichageMap :: [(Coord,Carte.Case)] -> Renderer -> TextureMap -> SpriteMap -> IO ()
-affichageMap ((coord,cases):[]) renderer tmap smap = S.displaySprite renderer tmap (affichage coord cases smap)
-affichageMap ((coord,cases):tail) renderer tmap smap = do
-  S.displaySprite renderer tmap (affichage coord cases smap)
-  affichageMap tail renderer tmap smap
+affichageMap :: Int -> Int -> [(Coord,Carte.Case)] -> Renderer -> TextureMap -> SpriteMap -> IO ()
+affichageMap x y ((coord,cases):[]) renderer tmap smap = S.displaySprite renderer tmap (affichage x y coord cases smap)
+affichageMap x y ((coord,cases):tail) renderer tmap smap = do
+  S.displaySprite renderer tmap (affichage x y coord cases smap)
+  affichageMap x y tail renderer tmap smap
       
 
 ------------------------------------------
@@ -157,8 +157,8 @@ main = do
 
 affichagePerso :: Int -> Int -> Renderer -> TextureMap -> SpriteMap -> IO()
 affichagePerso x y renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
-                                  (fromIntegral x)
-                                  (fromIntegral y))
+                                  (fromIntegral 350)
+                                  (fromIntegral 250))
 
 ------------------------------------------- 
 refresh::[Event] -> Keyboard -> Keyboard
@@ -177,14 +177,14 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp carte)= 
   clear renderer
   --- display background
   S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
-
+{-}
   -- display perso 
   S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
                                  (fromIntegral x)
                                  (fromIntegral y))
   ---
-  
-  affichageMap (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
+  -}
+  affichageMap  x y (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
   affichagePerso x y renderer tmap smap 
   present renderer
 
