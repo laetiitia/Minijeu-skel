@@ -16,8 +16,8 @@ import qualified SpriteMap as SM
 
 data Case = Vide -- une case vide
   | Perso --id
-  | AngleHD
-  | AngleHG
+  | AngleBD
+  | AngleBG
   | Horizontal
   | VerticalG
   | VerticalD -- infranchissable (sauf pour les fantomes ...)
@@ -27,23 +27,23 @@ instance Show Case where
   show c = caseToName c
 
 propCase :: Case -> Bool
-propCase c = (c == Vide ) || (c == Perso) || (c == AngleHD) || (c == AngleHG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
+propCase c = (c == Vide ) || (c == Perso) || (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
 
 associate :: Char -> Case
 associate x = case x of
-  '7' -> AngleHG
-  '9' -> AngleHD
+  '1' -> AngleBG
+  '3' -> AngleBD
   '2' -> Horizontal
   '4' -> VerticalG
   '6' -> VerticalD
   ' ' -> Vide
-  'X' -> Perso
+  '@' -> Perso
   otherwise -> Vide
 
 caseToName :: Case -> String
 caseToName x = case x of
-  AngleHG -> "angleHG"
-  AngleHD -> "angleHD"
+  AngleBG -> "angleBG"
+  AngleBD -> "angleBD"
   Horizontal -> "Horizontal"
   VerticalG -> "VerticalG"
   VerticalD -> "VerticalD"
@@ -51,7 +51,7 @@ caseToName x = case x of
   Perso -> "perso"
 
 isMur :: Case -> Bool
-isMur c = (c == AngleHD) || (c == AngleHG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
+isMur c = (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
 
 ---------------------------------
 ------------ COORD --------------

@@ -63,19 +63,19 @@ loadPerso rdr path tmap smap = do
   return (tmap', smap')
 
 
-loadangleHD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadangleHD rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "angleHD") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleHD") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "angleHD") sprite smap
+loadangleBD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadangleBD rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "angleBD") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleBD") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "angleBD") sprite smap
   return (tmap', smap')
 
 
-loadangleHG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadangleHG rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "angleHG") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleHG") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "angleHG") sprite smap
+loadangleBG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadangleBG rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "angleBG") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleBG") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "angleBG") sprite smap
   return (tmap', smap') 
 
 
@@ -132,16 +132,16 @@ main = do
   window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
   renderer <- createRenderer window (-1) defaultRenderer
   -- chargement de l'image du fond
-  (tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
+  --(tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du personnage
-  (tmap', smap') <- loadPerso renderer "assets/perso.png" tmap smap
+  (tmap', smap') <- loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
   -- chargement du virus
-  (tmap4, smap4) <- loadangleHD renderer "assets/texture/angleHD.png" tmap' smap'
-  (tmap5, smap5) <- loadangleHG renderer "assets/texture/angleHG.png" tmap4 smap4
+  (tmap4, smap4) <- loadangleBD renderer "assets/texture/angleBD.png" tmap' smap'
+  (tmap5, smap5) <- loadangleBG renderer "assets/texture/angleBG.png" tmap4 smap4
   (tmap6, smap6) <- loadSol renderer "assets/texture/sol.png" tmap5 smap5
-  (tmap7, smap7) <- loadHorizontal renderer "assets/texture/Horizontal.png" tmap6 smap6
+  (tmap7, smap7) <- loadHorizontal renderer "assets/texture/horizontal.png" tmap6 smap6
   (tmap8, smap8) <- loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
-  (tmap9, smap9) <- loadVerticalG renderer "assets/texture/VerticalG.png" tmap8 smap8
+  (tmap9, smap9) <- loadVerticalG renderer "assets/texture/verticalG.png" tmap8 smap8
   -- initialisation de l'état du jeu
   -- let gameState = M.initGameState
 
@@ -175,15 +175,8 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp carte)= 
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
   let kbd' = refresh events kbd
   clear renderer
-  --- display background
-  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
-{-}
-  -- display perso 
-  S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
-                                 (fromIntegral x)
-                                 (fromIntegral y))
-  ---
-  -}
+
+
   affichageMap  x y (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
   affichagePerso x y renderer tmap smap 
   present renderer
