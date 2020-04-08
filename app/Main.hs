@@ -110,9 +110,9 @@ loadVerticalG rdr path tmap smap = do
 -------------------------------------------
 ---------------- AFFICHAGE ----------------
 -------------------------------------------
-affichage ::Coord -> Carte.Case -> SpriteMap ->Sprite
+affichage :: Coord -> Carte.Case -> SpriteMap ->Sprite
 affichage (Carte.C x y) cases smap = (S.moveTo (SM.fetchSprite (SpriteId (Carte.caseToName cases)) smap)
-                                  (fromIntegral x)
+                                  (fromIntegral (x))
                                   (fromIntegral y))
 
 affichageMap :: [(Coord,Carte.Case)] -> Renderer -> TextureMap -> SpriteMap -> IO ()
@@ -146,7 +146,7 @@ main = do
   -- let gameState = M.initGameState
 
   map <- readFile "assets/defaultMap.txt"
-  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte x y map
+  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte (x*50) (y*50) map
 
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
@@ -200,4 +200,4 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp carte)= 
   --- update du game state
   let gameState' = M.gameStep gameState kbd' deltaTime
   
-  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap kbd' gameState')
+  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap K.createKeyboard gameState')

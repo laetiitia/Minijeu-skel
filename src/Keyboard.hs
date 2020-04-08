@@ -36,7 +36,7 @@ handleEventR event kbd =
 
 
 handleEventP :: Event -> Keyboard -> Keyboard
-handleEventR event kbd =
+handleEventP event kbd =
   case eventPayload event of
     KeyboardEvent keyboardEvent ->
       if keyboardEventKeyMotion keyboardEvent == Pressed

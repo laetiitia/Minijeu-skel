@@ -5,7 +5,11 @@ import SDL
 
 import Keyboard (Keyboard)
 import qualified Keyboard as K
+import qualified Data.Map.Strict as M
 import Carte (Carte)
+import Carte (Coord)
+import Carte (Case)
+import qualified Carte as C
 
 data GameState = GameState { persoX :: Int
                            , persoY :: Int
@@ -13,25 +17,30 @@ data GameState = GameState { persoX :: Int
                            , carte :: Carte}
 
 
+testeCoord :: Int -> Int -> M.Map Coord Case -> Bool
+testeCoord x y map = case M.lookup (C.C x y) map of
+    Just C.Vide -> True
+    otherwise -> False
+
 
 initGameState :: Carte -> GameState
-initGameState carte = GameState 50 50 25 carte
+initGameState carte = GameState 50 50 50 carte
 
 moveLeft :: GameState -> GameState
-moveLeft gs@(GameState px _ sp _) | px > 0 = gs { persoX = px - sp }
+moveLeft gs@(GameState px py sp (C.Carte l h contenue)) | px > 0 && (testeCoord (px - sp) py contenue) = gs { persoX = px - sp }
                                 | otherwise = gs
 
 moveRight :: GameState -> GameState
-moveRight gs@(GameState px _ sp _) | px < 630 = gs { persoX = px + sp }
+moveRight gs@(GameState px py sp (C.Carte l h contenue)) | px < l && (testeCoord (px + sp) py contenue)= gs { persoX = px + sp }
                                  | otherwise = gs
 
                               
 moveUp :: GameState -> GameState
-moveUp gs@(GameState _ py sp _) | py > 0 = gs { persoY = py - sp }
+moveUp gs@(GameState px py sp (C.Carte l h contenue)) | py > 0 && (testeCoord px (py - sp) contenue)= gs { persoY = py - sp }
                               | otherwise = gs
 
 moveDown :: GameState -> GameState
-moveDown gs@(GameState _ py sp _) | py < 430 = gs { persoY = py + sp }
+moveDown gs@(GameState px py sp (C.Carte l h contenue)) | py < h && (testeCoord px (py + sp) contenue) = gs { persoY = py + sp }
                                 | otherwise = gs
 
 
