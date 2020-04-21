@@ -22,16 +22,18 @@ data Case = Vide -- une case vide
   | VerticalG
   | VerticalD -- infranchissable (sauf pour les fantomes ...)
   | PorteNSF
-  | PorteEOF
+  | PorteEOFG
+  | PorteEOFD
   | PorteNSO
-  | PorteEOO
+  | PorteEOOG
+  | PorteEOOD
   deriving Eq
 
 instance Show Case where
   show c = caseToName c
 
 propCase :: Case -> Bool
-propCase c = (c == Vide ) || (c == Perso) || (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) || (c == PorteEOF) || (c == PorteEOO) || (c == PorteNSF) || (c == PorteNSO)
+propCase c = (c == Vide ) || (c == Perso) || (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) || (c == PorteEOFD) || (c == PorteEOOD) || (c == PorteNSF) || (c == PorteNSO)
 
 associate :: Char -> Case
 associate x = case x of
@@ -44,8 +46,10 @@ associate x = case x of
   '@' -> Perso
   'a' -> PorteNSF
   'b' -> PorteNSO
-  'c' -> PorteEOF
-  'd' -> PorteEOO
+  'c' -> PorteEOFD
+  'd' -> PorteEOOD
+  'e' -> PorteEOFG
+  'f' -> PorteEOOG
   otherwise -> Vide
 
 caseToName :: Case -> String
@@ -57,8 +61,10 @@ caseToName x = case x of
   VerticalD -> "VerticalD"
   Vide -> "sol"
   Perso -> "perso"
-  PorteEOF -> "PorteEOF"
-  PorteEOO -> "PorteEOO"
+  PorteEOFG -> "PorteEOFG"
+  PorteEOOG -> "PorteEOOG"
+  PorteEOFD -> "PorteEOFD"
+  PorteEOOD -> "PorteEOOD"
   PorteNSF -> "PorteNSF"
   PorteNSO -> "PorteNSO"
 

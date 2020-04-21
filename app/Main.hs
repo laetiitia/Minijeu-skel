@@ -126,21 +126,35 @@ loadPorteNSF rdr path tmap smap = do
   return (tmap', smap')
   
 
-loadPorteEOO :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOO rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOO") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOO") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOO") sprite smap
+loadPorteEOOD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadPorteEOOD rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOOD") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOOD") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "PorteEOOD") sprite smap
   return (tmap', smap')
 
 
-loadPorteEOF :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOF rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOF") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOF") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOF") sprite smap
+loadPorteEOOG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadPorteEOOG rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOOG") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOOG") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "PorteEOOG") sprite smap
   return (tmap', smap')
 
+loadPorteEOFD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadPorteEOFD rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOFD") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOFD") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "PorteEOFD") sprite smap
+  return (tmap', smap')
+
+
+loadPorteEOFG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadPorteEOFG rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOFG") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOFG") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "PorteEOFG") sprite smap
+  return (tmap', smap')
 
 loadOrc :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
 loadOrc rdr path tmap smap = do
@@ -188,12 +202,13 @@ main = do
   (tmap7, smap7) <- loadHorizontal renderer "assets/texture/horizontal.png" tmap6 smap6
   (tmap8, smap8) <- loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
   (tmap9, smap9) <- loadVerticalG renderer "assets/texture/verticalG.png" tmap8 smap8
-  (tmap10, smap10) <- loadPorteEOF renderer "assets/texture/porteF.png" tmap9 smap9
-  (tmap11, smap11) <- loadPorteEOO renderer "assets/texture/porteO.png" tmap10 smap10
-  (tmap12, smap12) <- loadPorteNSF renderer "assets/texture/porteF.png" tmap11 smap11
+  (tmap10, smap10) <- loadPorteEOFG renderer "assets/texture/PorteEOFG.png" tmap9 smap9
+  (tmap11, smap11) <- loadPorteEOOG renderer "assets/texture/PorteEOOG.png" tmap10 smap10
+  (tmap12, smap12) <- loadPorteNSF renderer "assets/texture/walls.png" tmap11 smap11
   (tmap13, smap13) <- loadPorteNSO renderer "assets/texture/porteO.png" tmap12 smap12
   (tmap14, smap14) <- loadOrc renderer "assets/orc.png" tmap13 smap13
-  
+  (tmap15, smap15) <- loadPorteEOOD renderer "assets/texture/PorteEOOD.png" tmap14 smap14
+  (tmap16, smap16) <- loadPorteEOFD renderer "assets/texture/PorteEOFD.png" tmap15 smap15
 
 
   -- initialisation de l'état du jeu
@@ -205,7 +220,7 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap14 smap14 kbd (M.initGameState carte) 
+  gameLoop 10 renderer tmap16 smap16 kbd (M.initGameState carte) 0
 
 
 
@@ -216,7 +231,7 @@ affichagePerso x y renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (
 
 
 affichageMonstres :: Int -> Int -> [Monstre] -> Renderer -> TextureMap -> SpriteMap -> IO()
-affichageMonstres px py ((M.M e (Carte.C x y)) : []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
+affichageMonstres px py ((M.M e (Carte.C x y) _ _) : []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
                                   (fromIntegral (x-px+350))
                                   (fromIntegral (y-py+250)))
 
@@ -228,8 +243,8 @@ refresh events kbd = K.handleEvent (head events) kbd
 ---------------- GAMELOOP------------------
 -------------------------------------------
 
-gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> IO ()
-gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp m carte)= do
+gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState ->Int -> IO ()
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp m carte) cpt= do
   startTime <- time
   events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
@@ -241,7 +256,7 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp m carte)
   affichagePerso x y renderer tmap smap 
   affichageMonstres x y m renderer tmap smap
   present renderer
-
+  let gameState' = M.mooveMonstre cpt gameState
   
   endTime <- time
   let refreshTime = endTime - startTime
@@ -252,6 +267,6 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y sp m carte)
   -- putStrLn $ "Delta time: " <> (show (deltaTime * 1000)) <> " (ms)"
   -- putStrLn $ "Frame rate: " <> (show (1 / deltaTime)) <> " (frame/s)"
   --- update du game state
-  let gameState' = M.gameStep gameState kbd' deltaTime
+  let gameState'' = M.gameStep gameState' kbd' deltaTime
   
-  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap K.createKeyboard gameState')
+  unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap K.createKeyboard gameState'' ((cpt+1) `mod` 10))
