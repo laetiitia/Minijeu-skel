@@ -13,8 +13,9 @@ import qualified Carte as C
 
 data Espece = 
     Orc
+    | Skeleton
 
-data Monstre = M {espece :: Espece, coor :: Coord, direct :: String, cpt :: Int}
+data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int}
 
 data GameState = GameState { persoX :: Int
                            , persoY :: Int
@@ -22,9 +23,41 @@ data GameState = GameState { persoX :: Int
                            , monstres :: [Monstre]
                            , carte :: Carte}
 
+
+-----------------------------
+----- MONSTER FUNCTIONS -----
+-----------------------------
 especeToString :: Espece -> String
 especeToString e = case e of
     Orc -> "Orc"
+    Skeleton -> "Skeleton"
+
+getMonsterPattern :: Espece -> [String]
+getMonsterPattern esp =
+    case esp of
+        Orc -> ["Haut", "Droite", "Bas", "Gauche"]
+        Skeleton -> ["Droite", "Droite", "Haut","Gauche", "Haut", "Haut", "Gauche","Bas","Bas"]
+
+moveToDir :: String -> C.Coord -> C.Coord
+moveToDir str (C.C x y) = 
+    case str of 
+        "Haut" -> (C.C x (y - 50))
+        "Droite" -> (C.C (x + 50) y)
+        "Gauche" -> (C.C (x - 50) y)
+        "Bas" -> (C.C x (y + 50))
+
+initMonstres ::Int -> [Monstre]
+initMonstres 0 = []
+initMonstres x = (Monster Orc (C.C 250 250) 0 3): (initMonstres (x - 1))
+
+mooveCreature :: Monstre -> Monstre
+mooveCreature (Monster Orc (C.C x y) index cpt) | cpt == 0 = (Monster Orc (C.C x y) ((index + 1) `mod` (length (getMonsterPattern Orc))) 3) 
+                                                | cpt > 0  = (Monster Orc (moveToDir ((getMonsterPattern Orc)!!index) (C.C x y) ) index (cpt-1) ) 
+
+
+-----------------------------
+----- GENERAL FUNCTIONS -----
+-----------------------------
 
 testeCoord :: Int -> Int -> M.Map Coord Case -> Bool
 testeCoord x y map = case M.lookup (C.C x y) map of
@@ -33,19 +66,6 @@ testeCoord x y map = case M.lookup (C.C x y) map of
     Just C.PorteNSO -> True
     otherwise -> False
 
-initMonstres ::Int -> [Monstre]
-initMonstres 0 = []
-initMonstres x = (M Orc (C.C 250 250) "Haut" 3): (initMonstres (x - 1))
-
-mooveCreature :: Monstre -> Monstre
-mooveCreature (M Orc (C.C x y) d cpt) | d == "Haut" && cpt > 0 = (M Orc (C.C x (y-50)) d (cpt-1))
-                                      | d == "Haut" && cpt == 0 = (M Orc (C.C x y) "Droite" 3)
-                                      | d == "Droite" && cpt > 0 = (M Orc (C.C (x+50) y) d (cpt-1))
-                                      | d == "Droite" && cpt == 0 = (M Orc (C.C x y) "Bas" 3)
-                                      | d == "Bas" && cpt > 0 = (M Orc (C.C x (y+50)) d (cpt-1))
-                                      | d == "Bas" && cpt == 0 = (M Orc (C.C x y) "Gauche" 3)
-                                      | d == "Gauche" && cpt > 0 = (M Orc (C.C (x-50) y) d (cpt-1))
-                                      | d == "Gauche" && cpt == 0 = (M Orc (C.C x y) "Haut" 3)
 
 mooveEspece :: [Monstre] -> [Monstre]
 mooveEspece (m:[]) = [(mooveCreature m)]

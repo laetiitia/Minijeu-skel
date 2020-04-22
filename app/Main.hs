@@ -231,7 +231,7 @@ affichagePerso x y renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (
 
 
 affichageMonstres :: Int -> Int -> [Monstre] -> Renderer -> TextureMap -> SpriteMap -> IO()
-affichageMonstres px py ((M.M e (Carte.C x y) _ _) : []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
+affichageMonstres px py ((M.Monster e (Carte.C x y) _ _) : []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
                                   (fromIntegral (x-px+350))
                                   (fromIntegral (y-py+250)))
 
