@@ -9,6 +9,8 @@ import qualified Data.Set as Set
 
 import Data.List (foldl')
 
+import qualified Data.Map.Strict as Map
+
 import Foreign.C.Types (CInt (..) )
 
 import SDL
@@ -32,153 +34,58 @@ import qualified Debug.Trace as T
 import Model (GameState)
 import qualified Model as M
 
-import Model (Monstre)
-----
-import qualified Data.Map.Strict as Map
+import Monster (Monstre)
+import qualified Monster as Mst
+
+import Outils (Outil)
+import qualified Outils as O
+
 import Carte (Carte)
 import Carte (Coord)
-import Model (Outil)
 import qualified Carte as Carte
 
-
---------------------------------------------
---------------- LOAD SPRITE ----------------
---------------------------------------------
-
---------------------------------------------
---------------- LOAD SPRITE ----------------
---------------------------------------------
-
-loadBackground :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadBackground rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "background") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "background") (S.mkArea 0 0 700 500)
-  let smap' = SM.addSprite (SpriteId "background") sprite smap
-  return (tmap', smap')
+import qualified LoadSprite as LS
 
 
-loadPerso :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPerso rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "perso") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "perso") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "perso") sprite smap
-  return (tmap', smap')
 
+------------------------------------------
+----------------- MAIN -------------------
+------------------------------------------
 
-loadangleBD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadangleBD rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "angleBD") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleBD") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "angleBD") sprite smap
-  return (tmap', smap')
+main :: IO ()
+main = do
+  initializeAll
+  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
+  renderer <- createRenderer window (-1) defaultRenderer
 
+  -- chargement des sprites
+  (tmap', smap') <- LS.loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
+  (tmap4, smap4) <- LS.loadangleBD renderer "assets/texture/angleBD.png" tmap' smap'
+  (tmap5, smap5) <- LS.loadangleBG renderer "assets/texture/angleBG.png" tmap4 smap4
+  (tmap6, smap6) <- LS.loadSol renderer "assets/texture/sol.png" tmap5 smap5
+  (tmap7, smap7) <- LS.loadHorizontal renderer "assets/texture/horizontal.png" tmap6 smap6
+  (tmap8, smap8) <- LS.loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
+  (tmap9, smap9) <- LS.loadVerticalG renderer "assets/texture/verticalG.png" tmap8 smap8
+  (tmap10, smap10) <- LS.loadPorteEOFG renderer "assets/texture/PorteEOFG.png" tmap9 smap9
+  (tmap11, smap11) <- LS.loadPorteEOOG renderer "assets/texture/PorteEOOG.png" tmap10 smap10
+  (tmap12, smap12) <- LS.loadPorteNSF renderer "assets/texture/walls.png" tmap11 smap11
+  (tmap13, smap13) <- LS.loadPorteNSO renderer "assets/texture/porteO.png" tmap12 smap12
+  (tmap14, smap14) <- LS.loadOrc renderer "assets/orc.png" tmap13 smap13
+  (tmap15, smap15) <- LS.loadPorteEOOD renderer "assets/texture/PorteEOOD.png" tmap14 smap14
+  (tmap16, smap16) <- LS.loadPorteEOFD renderer "assets/texture/PorteEOFD.png" tmap15 smap15
+  (tmap17, smap17) <- LS.loadPerso2 renderer "assets/perso2.png" tmap16 smap16
+  (tmap18, smap18) <- LS.loadEpee renderer "assets/epee.png" tmap17 smap17
 
-loadangleBG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadangleBG rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "angleBG") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "angleBG") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "angleBG") sprite smap
-  return (tmap', smap') 
+  -- initialisation de l'état du jeu
+  -- let gameState = M.initGameState
 
+  map <- readFile "assets/defaultMap.txt"
+  let carte = Carte.readCarte map
 
-loadSol :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadSol rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "sol") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "sol") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "sol") sprite smap
-  return (tmap', smap')
-
-loadHorizontal :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadHorizontal rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "Horizontal") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "Horizontal") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "Horizontal") sprite smap
-  return (tmap', smap')
-
-loadVerticalD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadVerticalD rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "VerticalD") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "VerticalD") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "VerticalD") sprite smap
-  return (tmap', smap')
-
-
-loadVerticalG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadVerticalG rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "VerticalG") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "VerticalG") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "VerticalG") sprite smap
-  return (tmap', smap')
-
-
-loadPorteNSO :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteNSO rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteNSO") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteNSO") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteNSO") sprite smap
-  return (tmap', smap')
-
-
-loadPorteNSF :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteNSF rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteNSF") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteNSF") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteNSF") sprite smap
-  return (tmap', smap')
-  
-
-loadPorteEOOD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOOD rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOOD") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOOD") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOOD") sprite smap
-  return (tmap', smap')
-
-
-loadPorteEOOG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOOG rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOOG") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOOG") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOOG") sprite smap
-  return (tmap', smap')
-
-loadPorteEOFD :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOFD rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOFD") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOFD") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOFD") sprite smap
-  return (tmap', smap')
-
-
-loadPorteEOFG :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPorteEOFG rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "PorteEOFG") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "PorteEOFG") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "PorteEOFG") sprite smap
-  return (tmap', smap')
-
-loadOrc :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadOrc rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "Orc") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "Orc") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "Orc") sprite smap
-  return (tmap', smap')
-
-
-loadPerso2 :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadPerso2 rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "perso2") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "perso2") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "perso2") sprite smap
-  return (tmap', smap')
-
-loadEpee :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
-loadEpee rdr path tmap smap = do
-  tmap' <- TM.loadTexture rdr path (TextureId "epee") tmap
-  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "epee") (S.mkArea 0 0 50 50)
-  let smap' = SM.addSprite (SpriteId "epee") sprite smap
-  return (tmap', smap')
-
+  -- initialisation de l'état du clavier
+  let kbd = K.createKeyboard
+  -- lancement de la gameLoop
+  gameLoop 10 renderer tmap18 smap18 kbd (M.initGameState carte) 0
 
 
 -------------------------------------------
@@ -196,49 +103,6 @@ affichageMap x y ((coord,cases):tail) renderer tmap smap = do
   affichageMap x y tail renderer tmap smap
       
 
-------------------------------------------
------------------ MAIN -------------------
-------------------------------------------
-
-main :: IO ()
-main = do
-  initializeAll
-  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
-  renderer <- createRenderer window (-1) defaultRenderer
-  -- chargement de l'image du fond
-  --(tmap, smap) <- loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
-  -- chargement du personnage
-  (tmap', smap') <- loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
-  -- chargement du virus
-  (tmap4, smap4) <- loadangleBD renderer "assets/texture/angleBD.png" tmap' smap'
-  (tmap5, smap5) <- loadangleBG renderer "assets/texture/angleBG.png" tmap4 smap4
-  (tmap6, smap6) <- loadSol renderer "assets/texture/sol.png" tmap5 smap5
-  (tmap7, smap7) <- loadHorizontal renderer "assets/texture/horizontal.png" tmap6 smap6
-  (tmap8, smap8) <- loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
-  (tmap9, smap9) <- loadVerticalG renderer "assets/texture/verticalG.png" tmap8 smap8
-  (tmap10, smap10) <- loadPorteEOFG renderer "assets/texture/PorteEOFG.png" tmap9 smap9
-  (tmap11, smap11) <- loadPorteEOOG renderer "assets/texture/PorteEOOG.png" tmap10 smap10
-  (tmap12, smap12) <- loadPorteNSF renderer "assets/texture/walls.png" tmap11 smap11
-  (tmap13, smap13) <- loadPorteNSO renderer "assets/texture/porteO.png" tmap12 smap12
-  (tmap14, smap14) <- loadOrc renderer "assets/orc.png" tmap13 smap13
-  (tmap15, smap15) <- loadPorteEOOD renderer "assets/texture/PorteEOOD.png" tmap14 smap14
-  (tmap16, smap16) <- loadPorteEOFD renderer "assets/texture/PorteEOFD.png" tmap15 smap15
-  (tmap17, smap17) <- loadPerso2 renderer "assets/perso2.png" tmap16 smap16
-  (tmap18, smap18) <- loadEpee renderer "assets/epee.png" tmap17 smap17
-
-  -- initialisation de l'état du jeu
-  -- let gameState = M.initGameState
-
-  map <- readFile "assets/defaultMap.txt"
-  let carte = let (x,y)= Carte.getFormat map in Carte.readCarte (x*50) (y*50) map
-
-  -- initialisation de l'état du clavier
-  let kbd = K.createKeyboard
-  -- lancement de la gameLoop
-  gameLoop 10 renderer tmap18 smap18 kbd (M.initGameState carte) 0
-
-
-
 affichagePerso :: Int -> Int -> Bool -> Renderer -> TextureMap -> SpriteMap -> IO()
 affichagePerso x y True renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId "perso") smap)
                                   (fromIntegral 350)
@@ -249,21 +113,15 @@ affichagePerso x y False renderer tmap smap= S.displaySprite renderer tmap (S.mo
 
 
 affichageMonstres :: Int -> Int -> [Monstre] -> Renderer -> TextureMap -> SpriteMap -> IO()
-affichageMonstres px py ((M.Monster e (Carte.C x y) _ _) : []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
-                                                                                                                    (fromIntegral (x-px+350))
-                                                                                                                    (fromIntegral (y-py+250)))
-
-affichageMonstres px py ((M.Monster e (Carte.C x y) _ _) : xs) renderer tmap smap=do { S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.especeToString e)) smap)
+affichageMonstres px py [] renderer tmap smap = do {return ();}
+affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _) : xs) renderer tmap smap = do { S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (Mst.especeToString e)) smap)
                                                                                                                       (fromIntegral (x-px+350))
                                                                                                                       (fromIntegral (y-py+250)));
                                                                                       affichageMonstres px py xs renderer tmap smap;}
 
 affichageOutils :: Int -> Int -> [(Coord,Outil)] -> Renderer -> TextureMap -> SpriteMap -> IO()
-affichageOutils px py (((Carte.C x y),(M.Outil e True) ): []) renderer tmap smap= S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.typeToString e)) smap)
-                                                                                                                (fromIntegral (x-px+350))
-                                                                                                                (fromIntegral (y-py+250)))
-
-affichageOutils px py (((Carte.C x y),(M.Outil e True) ) : xs) renderer tmap smap=do {S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (M.typeToString e)) smap)
+affichageOutils px py [] renderer tmap smap = do {return ();}
+affichageOutils px py (((Carte.C x y),(O.Outil e True) ) : xs) renderer tmap smap = do {S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (O.typeToString e)) smap)
                                                                                                                     (fromIntegral (x-px+350))
                                                                                                                     (fromIntegral (y-py+250)));
                                                                                   affichageOutils px py xs renderer tmap smap;}
@@ -273,6 +131,11 @@ refresh::[Event] -> Keyboard -> Keyboard
 refresh [] kbd = kbd
 refresh events kbd = K.handleEvent (head events) kbd
 
+
+
+
+
+------------------------------------------
 ---------------- GAMELOOP------------------
 -------------------------------------------
 
@@ -290,7 +153,7 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o 
   affichageMonstres x y m renderer tmap smap
   affichageOutils x y (Map.toList o) renderer tmap smap
   present renderer
-  let gameState' = M.mooveMonstre cpt gameState
+  let gameState' = M.moveMonsters cpt gameState
   
   endTime <- time
   let refreshTime = endTime - startTime

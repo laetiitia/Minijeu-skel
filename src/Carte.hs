@@ -29,11 +29,10 @@ data Case = Vide -- une case vide
   | PorteEOOD
   deriving Eq
 
+
 instance Show Case where
   show c = caseToName c
 
-propCase :: Case -> Bool
-propCase c = (c == Vide ) || (c == Perso) || (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) || (c == PorteEOFD) || (c == PorteEOOD) || (c == PorteNSF) || (c == PorteNSO)
 
 associate :: Char -> Case
 associate x = case x of
@@ -68,6 +67,7 @@ caseToName x = case x of
   PorteNSF -> "PorteNSF"
   PorteNSO -> "PorteNSO"
 
+-- Verifie que la case soit un mur
 isMur :: Case -> Bool
 isMur c = (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
 
@@ -84,7 +84,7 @@ instance Ord Coord where
 instance Show Coord where
   show (C cx cy) = "{ cx: "++(show cx)++" , cy: "++(show cy)++" }"
 
--- Verifie que les coordonnées soit positif et qu'ils soient conforme à la hauteur est largeur
+-- Verifie que les coordonnées soit positif et qu'ils soient conforme à la hauteur et largeur
 propCoord :: Coord -> Int -> Int -> Bool
 propCoord (C cx cy) h l = 0 <= cx && cx <= l && 0 <= cy && cy <= h
 
@@ -98,21 +98,28 @@ data Carte = Carte { cartel :: Int , -- largeur
                      carte_contenu :: (M.Map Coord Case) -- cases de la carte 
                      }
 
+
+
+  -- *** INVARIANTS SUR LES CARTES *** --
+
+propCarte ::  Carte -> Bool
+propCarte carte = (propTailleCarte carte) && (propCaseCarte carte)
+
 -- Verifie que:
--- la hauteur et largeur de la carte par rapport à la fenetre
+-- la hauteur et largeur de la carte par rapport aux nombres de cases
+propTailleCarte :: Carte -> Bool
+propTailleCarte (Carte haut larg contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
+
+-- Verifie que:
 -- chaque case existe et que les coordonnées soient correctes
 -- que la carte soit bien entouré de mur
-propCarte ::  Carte -> Bool
-propCarte (Carte haut larg contenu) = let inv0 = ((0 < haut && haut <= 500 ) && (0 < larg && larg <= 700 )) in
-  if not inv0 
-    then False
-    else let list = M.foldrWithKey checkMap [] contenu in
-      if (length list) == ((haut `div` 50) * (larg `div` 50)) 
-        then listAnd list
-        else False
-        where checkMap (C cx cy) val acc = let inv1 = ((propCoord (C cx cy) haut larg) && (propCase val)) in (if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) then ((isMur val) && inv1):acc else inv1:acc)
+propCaseCarte :: Carte -> Bool
+propCaseCarte (Carte haut larg contenu) = let list = M.foldrWithKey checkMap [] contenu in listAnd list
+  where checkMap (C cx cy) val acc = (let inv1 = (propCoord (C cx cy) haut larg) in if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) 
+                                                                                      then ((isMur val) && inv1):acc 
+                                                                                      else inv1:acc )
 
-
+-- Realise un 'and' sur tout les elements de la liste
 listAnd :: [Bool] -> Bool
 listAnd [] = True
 listAnd (x:xs) 
@@ -120,17 +127,35 @@ listAnd (x:xs)
   | otherwise = listAnd xs
 
 
+
+
+    -- *** OPERATIONS SUR LES CARTES *** --
+
+-- Permet d'initialiser le contenu de la carte (les cases vont de 50 à 50)
 initMapFromFile :: String -> Coord -> M.Map Coord Case -> M.Map Coord Case
 initMapFromFile [] _ acc = acc
 initMapFromFile (head:tail) (C x y) acc = if head == '\n' 
                                    then initMapFromFile tail (C 0 (y+50)) acc 
                                    else initMapFromFile tail (C (x+50) y) (M.insert (C x y) (associate head) acc)
 
-readCarte :: Int -> Int -> String -> Carte
-readCarte x y txt = Carte x y (initMapFromFile txt (C 0 0) M.empty)
 
+-- Recupere du string represantant la carte, le nombre de case maximum dans une ligne et dans une colonne.
 getFormat :: String -> (Int, Int)
 getFormat str = let list = lines str in (maximum (map (\x -> length x) list), length list) 
+
+
+-- Permet d'initialiser une carte grace au string reprensantant la date
+readCarte :: String -> Carte
+readCarte txt = let (x, y) = (getFormat txt) in Carte (x*50) (y*50) (initMapFromFile txt (C 0 0) M.empty)
+
+
+-- Test si la case est accesible (ie soit vide soit la porte est ouverte)
+caseAccesible :: Int -> Int -> M.Map Coord Case -> Bool
+caseAccesible x y map = case M.lookup (C x y) map of
+    Just Vide -> True
+    Just PorteEOOD -> True
+    Just PorteNSO -> True
+    otherwise -> False
 
 
 
