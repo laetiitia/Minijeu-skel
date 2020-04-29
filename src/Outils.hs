@@ -43,3 +43,7 @@ isKey :: Int -> Int -> M.Map Coord Outil -> Bool
 isKey x y map = case M.lookup (C.C x y) map of
     Just (Outil Clef True) -> True
     otherwise -> False
+
+
+changeOutils :: Coord -> Type -> M.Map Coord Outil -> M.Map Coord Outil
+changeOutils c t map = M.insert c (Outil t False) map

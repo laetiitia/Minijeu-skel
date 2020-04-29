@@ -114,10 +114,11 @@ affichagePerso x y False renderer tmap smap= S.displaySprite renderer tmap (S.mo
 
 affichageMonstres :: Int -> Int -> [Monstre] -> Renderer -> TextureMap -> SpriteMap -> IO()
 affichageMonstres px py [] renderer tmap smap = do {return ();}
-affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _) : xs) renderer tmap smap = do { S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (Mst.especeToString e)) smap)
+affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _ True) : xs) renderer tmap smap = do { S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (Mst.especeToString e)) smap)
                                                                                                                       (fromIntegral (x-px+350))
                                                                                                                       (fromIntegral (y-py+250)));
                                                                                       affichageMonstres px py xs renderer tmap smap;}
+affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _ _) : xs) renderer tmap smap = affichageMonstres px py xs renderer tmap smap
 
 affichageOutils :: Int -> Int -> [(Coord,Outil)] -> Renderer -> TextureMap -> SpriteMap -> IO()
 affichageOutils px py [] renderer tmap smap = do {return ();}
@@ -125,6 +126,7 @@ affichageOutils px py (((Carte.C x y),(O.Outil e True) ) : xs) renderer tmap sma
                                                                                                                     (fromIntegral (x-px+350))
                                                                                                                     (fromIntegral (y-py+250)));
                                                                                   affichageOutils px py xs renderer tmap smap;}
+affichageOutils px py (((Carte.C x y),(O.Outil e _) ) : xs) renderer tmap smap = affichageOutils px py xs renderer tmap smap
 
 ------------------------------------------- 
 refresh::[Event] -> Keyboard -> Keyboard
