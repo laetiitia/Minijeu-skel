@@ -1,6 +1,5 @@
 module Outils where
 
-import SDL
 
 import qualified Data.Map.Strict as M
 import Carte (Coord)

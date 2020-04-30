@@ -1,13 +1,7 @@
 module Carte where
 
-import SDL
-
-import Keyboard (Keyboard)
-import qualified Keyboard as K
 import qualified Data.Map.Strict as M
 
-import SpriteMap (SpriteMap, SpriteId (..))
-import qualified SpriteMap as SM
 
 
 ---------------------------------
@@ -15,18 +9,18 @@ import qualified SpriteMap as SM
 ---------------------------------
 
 data Case = Vide -- une case vide
-  | Perso --id
-  | AngleBD
-  | AngleBG
-  | Horizontal
-  | VerticalG
-  | VerticalD -- infranchissable (sauf pour les fantomes ...)
-  | PorteNSF
-  | PorteEOFG
-  | PorteEOFD
-  | PorteNSO
-  | PorteEOOG
-  | PorteEOOD
+  | Perso       --Id Personnage
+  | AngleBD     --Coin Mur Bas Gauche
+  | AngleBG     --Coin Mur Bas Droite
+  | Horizontal  --Mur Horizontal
+  | VerticalG   --Mur Vertical Gauche
+  | VerticalD   --Mur Vertical Droit infranchissable (sauf pour les fantomes ...)
+  | PorteNSF    --Porte Nord Sud Fermé
+  | PorteEOFG   --Porte Est Ouest Fermé Gauche
+  | PorteEOFD   --Porte Est Ouest Fermé Droite
+  | PorteNSO    --Porte Nord Sud Ouverte
+  | PorteEOOG   --Porte Est Ouest Ouverte Gauche
+  | PorteEOOD   --Porte Est Ouest Ouverte Droite
   deriving Eq
 
 
@@ -53,23 +47,27 @@ associate x = case x of
 
 caseToName :: Case -> String
 caseToName x = case x of
-  AngleBG -> "angleBG"
-  AngleBD -> "angleBD"
-  Horizontal -> "Horizontal"
-  VerticalG -> "VerticalG"
-  VerticalD -> "VerticalD"
+  AngleBG -> "angleBG"        --Coin Mur Bas Gauche
+  AngleBD -> "angleBD"        --Coin Mur Bas Droite
+  Horizontal -> "Horizontal"  --Mur Horizontal
+  VerticalG -> "VerticalG"    --Mur Vertical Gauche
+  VerticalD -> "VerticalD"    --Mur Vertical Droit
   Vide -> "sol"
   Perso -> "perso"
-  PorteEOFG -> "PorteEOFG"
-  PorteEOOG -> "PorteEOOG"
-  PorteEOFD -> "PorteEOFD"
-  PorteEOOD -> "PorteEOOD"
-  PorteNSF -> "PorteNSF"
-  PorteNSO -> "PorteNSO"
+  PorteEOFG -> "PorteEOFG"    --Porte Est Ouest Fermé Gauche
+  PorteEOOG -> "PorteEOOG"    --Porte Est Ouest Ouverte Gauche
+  PorteEOFD -> "PorteEOFD"    --Porte Est Ouest Fermé Droite
+  PorteEOOD -> "PorteEOOD"    --Porte Est Ouest Ouverte Droite
+  PorteNSF -> "PorteNSF"      --Porte Nord Sud Fermé
+  PorteNSO -> "PorteNSO"      --Porte Nord Sud Ouverte
 
 -- Verifie que la case soit un mur
-isMur :: Case -> Bool
-isMur c = (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
+isWall :: Case -> Bool
+isWall c = (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
+
+-- Verifie que c'est une porte
+isDoor :: Case -> Bool
+isDoor c = (c == PorteEOFG) || (c == PorteEOOG) || (c == PorteEOFD) || (c == PorteEOOD) || (c == PorteNSF) || (c == PorteNSO) 
 
 ---------------------------------
 ------------ COORD --------------
@@ -100,24 +98,38 @@ data Carte = Carte { cartel :: Int , -- largeur
 
 
 
-  -- *** INVARIANTS SUR LES CARTES *** --
+-- *** INVARIANTS SUR LES CARTES *** --
 
 propCarte ::  Carte -> Bool
-propCarte carte = (propTailleCarte carte) && (propCaseCarte carte)
+propCarte carte = (propTailleCarte carte) && (propCaseCarte carte) && (propCasePorte carte)
 
 -- Verifie que:
 -- la hauteur et largeur de la carte par rapport aux nombres de cases
 propTailleCarte :: Carte -> Bool
-propTailleCarte (Carte haut larg contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
+propTailleCarte (Carte larg haut contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
 
 -- Verifie que:
 -- chaque case existe et que les coordonnées soient correctes
 -- que la carte soit bien entouré de mur
 propCaseCarte :: Carte -> Bool
-propCaseCarte (Carte haut larg contenu) = let list = M.foldrWithKey checkMap [] contenu in listAnd list
-  where checkMap (C cx cy) val acc = (let inv1 = (propCoord (C cx cy) haut larg) in if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) 
-                                                                                      then ((isMur val) && inv1):acc 
+propCaseCarte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
+  where checkCase (C cx cy) val acc = (let inv1 = (propCoord (C cx cy) haut larg) in if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) 
+                                                                                      then ((isWall val) && inv1):acc 
                                                                                       else inv1:acc )
+
+-- Verifie que:
+-- chaque porte est bien maintenu par des murs
+propCasePorte :: Carte -> Bool
+propCasePorte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
+  where checkCase (C cx cy) val acc = (if (isDoor val)
+                                        then (if (val == PorteNSF || val == PorteNSO)
+                                          then (checkWall (C (cx-50) cy) contenu):(checkWall (C (cx+50) cy) contenu):acc
+                                          else (checkWall (C cx (cy-50)) contenu):(checkWall (C cx (cy+50)) contenu):acc )
+                                        else acc)
+
+-- Verifie dans les coordonnées de cases si cette coordonnée correspond bien a un mur
+checkWall :: Coord -> M.Map Coord Case -> Bool
+checkWall c cases = let (Just res)= M.lookup c cases in isWall res 
 
 -- Realise un 'and' sur tout les elements de la liste
 listAnd :: [Bool] -> Bool
@@ -129,7 +141,7 @@ listAnd (x:xs)
 
 
 
-    -- *** OPERATIONS SUR LES CARTES *** --
+-- *** OPERATIONS SUR LES CARTES *** --
 
 -- Permet d'initialiser le contenu de la carte (les cases vont de 50 à 50)
 initMapFromFile :: String -> Coord -> M.Map Coord Case -> M.Map Coord Case
