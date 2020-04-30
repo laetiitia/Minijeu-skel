@@ -1,5 +1,6 @@
 module Outils where
 
+import SDL
 
 import qualified Data.Map.Strict as M
 import Carte (Coord)
@@ -32,16 +33,17 @@ initOutils ((id,(x,y)):xs) | id == "clef" = M.insert (C.C x y) (Outil Clef True)
 
 
 -- Verifie si c'est une épée ou non 
-isSword :: Int -> Int -> M.Map Coord Outil -> Bool
-isSword x y map = case M.lookup (C.C x y) map of
+isSword :: Int -> Int ->Bool -> M.Map Coord Outil -> Bool
+isSword x y False map = case M.lookup (C.C x y) map of
     Just (Outil Epee True) -> True
     otherwise -> False
-
+isSword x y b map = False
 -- Verifie si c'est une clé ou non
-isKey :: Int -> Int -> M.Map Coord Outil -> Bool
-isKey x y map = case M.lookup (C.C x y) map of
+isKey :: Int -> Int -> Bool -> M.Map Coord Outil -> Bool
+isKey x y False map = case M.lookup (C.C x y) map of
     Just (Outil Clef True) -> True
     otherwise -> False
+isKey x y b map = False
 
 
 changeOutils :: Coord -> Type -> M.Map Coord Outil -> M.Map Coord Outil

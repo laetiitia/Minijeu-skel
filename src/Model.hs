@@ -21,6 +21,7 @@ import qualified Monster as Mst
 import Outils (Outil)
 import Outils (Type)
 import qualified Outils as O
+import Debug.Trace as T
 
 
 data GameState = GameState { persoX :: Int
@@ -30,11 +31,13 @@ data GameState = GameState { persoX :: Int
                            , speed :: Int 
                            , monstres :: [Mst.Monstre]
                            , outils :: (M.Map Coord Outil)
-                           , carte :: Carte}
+                           ,iniCarte :: Carte
+                           , carte :: Carte
+                           }
 
 -- Initialise l'état du jeu
 initGameState :: Carte -> GameState
-initGameState carte = GameState 350 250 False False 50 (Mst.initMonstres 1) (O.initOutils [("epee",(200,200))]) carte
+initGameState carte = GameState 350 250 False False 50 (Mst.initMonstres 1) (O.initOutils [("epee",(200,200)),("clef",(300,300))]) carte carte
 
 
 -----------------------------
@@ -42,22 +45,22 @@ initGameState carte = GameState 350 250 False False 50 (Mst.initMonstres 1) (O.i
 -----------------------------
 -- Deplace le perso vers la gauche
 moveLeft :: GameState -> GameState
-moveLeft gs@(GameState px py _ _ sp _ _ (C.Carte l h contenue)) | px > 0 && (C.caseAccesible (px - sp) py contenue) = gs { persoX = px - sp }
+moveLeft gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | px > 0 && (C.caseAccesible (px - sp) py contenue) = gs { persoX = px - sp }
                                 | otherwise = gs
 
 -- Deplace le perso vers la droite
 moveRight :: GameState -> GameState
-moveRight gs@(GameState px py _  _ sp _ _ (C.Carte l h contenue)) | px < l && (C.caseAccesible (px + sp) py contenue)= gs { persoX = px + sp }
+moveRight gs@(GameState px py _  _ sp _ _ _ (C.Carte l h contenue)) | px < l && (C.caseAccesible (px + sp) py contenue)= gs { persoX = px + sp }
                                  | otherwise = gs
 
 -- Deplace le perso vers le haut                           
 moveUp :: GameState -> GameState
-moveUp gs@(GameState px py _ _ sp _ _ (C.Carte l h contenue)) | py > 0 && (C.caseAccesible px (py - sp) contenue)= gs { persoY = py - sp }
+moveUp gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | py > 0 && (C.caseAccesible px (py - sp) contenue)= gs { persoY = py - sp }
                               | otherwise = gs
 
 -- Deplace le perso vers le bas
 moveDown :: GameState -> GameState
-moveDown gs@(GameState px py _ _ sp _ _ (C.Carte l h contenue)) | py < h && (C.caseAccesible px (py + sp) contenue) = gs { persoY = py + sp }
+moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | py < h && (C.caseAccesible px (py + sp) contenue) = gs { persoY = py + sp }
                                 | otherwise = gs
 
 
@@ -66,8 +69,18 @@ moveDown gs@(GameState px py _ _ sp _ _ (C.Carte l h contenue)) | py < h && (C.c
 ------------------------------
 -- *** AUTRE DELACEMENT *** --
 ------------------------------
+
+
+-- Deplace les monstres lorsque le compteurs est à 0
+moveMonsters :: Int -> GameState -> GameState
+moveMonsters 0 gs@(GameState _ _ _ _ _ liste _ _ _) = gs { monstres = Mst.moveAllMonster liste}
+moveMonsters _ gs = gs
+
+------------------------------
+-- *** MODIF ETAT *** --
+------------------------------
 changeOutils :: GameState -> GameState
-changeOutils gs@(GameState px py e _ _ _ outils _) | (O.isSword px py outils || O.isKey px py outils) = let (O.Outil id aff) = M.findWithDefault (O.Outil O.ErrorOutil False) (C.C px py) outils in case id of
+changeOutils gs@(GameState px py e c _ _ outils _ _) | (O.isSword px py e outils || O.isKey px py c outils) = let (O.Outil id aff) = M.findWithDefault (O.Outil O.ErrorOutil False) (C.C px py) outils in case id of
                                                                                                                                                     O.Epee -> let o = (O.changeOutils (C.C px py) O.Epee outils) in gs { epee = True, outils = o }
                                                                                                                                                     O.Clef -> let o = (O.changeOutils (C.C px py) O.Clef outils) in gs { clef = True, outils = o }
                                                                                                                                                     otherwise -> gs
@@ -75,24 +88,21 @@ changeOutils gs@(GameState px py e _ _ _ outils _) | (O.isSword px py outils || 
 
 
 changeMonstres :: GameState -> GameState
-changeMonstres gs@(GameState px py True _ _ monstres _ _) | Mst.testeMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
+changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.testeMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
                                                           | otherwise = gs
-changeMonstres gs@(GameState px py False _ _ monstres _ c) |Mst.testeMonstres px py monstres =  initGameState c
+changeMonstres gs@(GameState px py False _ _ monstres _ ini _) |Mst.testeMonstres px py monstres =  initGameState ini
                                                            |otherwise = gs
 
--- Deplace les monstres lorsque le compteurs est à 0
-moveMonsters :: Int -> GameState -> GameState
-moveMonsters 0 gs@(GameState _ _ _ _ _ liste _ _) = gs { monstres = Mst.moveAllMonster liste}
-moveMonsters _ gs = gs
 
-
-
+activePorte :: GameState -> GameState
+activePorte gs@(GameState px py _ True sp _ _ _ (C.Carte l h contenue)) =let (map,b)=(C.changePorte px py 0 contenue) in if b then gs{carte = (C.Carte l h map),clef = False}else gs{carte = (C.Carte l h map)}
+activePorte gs = gs
 
 --------------------------------
 -- *** DELACEMENT GENERAL *** --
 --------------------------------
 gameStep :: RealFrac a => GameState -> Keyboard -> a -> GameState
-gameStep gstate keyb deltaTime = getEvent gstate keyb deltaTime [KeycodeZ,KeycodeQ,KeycodeS,KeycodeD]
+gameStep gstate keyb deltaTime = getEvent gstate keyb deltaTime [KeycodeZ,KeycodeQ,KeycodeS,KeycodeD,KeycodeK]
 
 -- Gere l'événement liée au clavier
 getEvent :: RealFrac a => GameState -> Keyboard -> a -> [Keycode] -> GameState 
@@ -106,4 +116,5 @@ moveTo gstate KeycodeZ deltaTime =  changeOutils (moveUp gstate)
 moveTo gstate KeycodeQ deltaTime =  changeOutils (moveLeft gstate)
 moveTo gstate KeycodeS deltaTime =  changeOutils (moveDown gstate)
 moveTo gstate KeycodeD deltaTime =  changeOutils (moveRight gstate)
+moveTo gstate KeycodeK deltaTime =  activePorte gstate
 moveTo gstate _ _ = gstate

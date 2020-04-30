@@ -158,4 +158,9 @@ loadEpee rdr path tmap smap = do
   let smap' = SM.addSprite (SpriteId "epee") sprite smap
   return (tmap', smap')
 
-
+loadClef :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadClef rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "clef") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "clef") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "clef") sprite smap
+  return (tmap', smap')

@@ -75,6 +75,7 @@ main = do
   (tmap16, smap16) <- LS.loadPorteEOFD renderer "assets/texture/PorteEOFD.png" tmap15 smap15
   (tmap17, smap17) <- LS.loadPerso2 renderer "assets/perso2.png" tmap16 smap16
   (tmap18, smap18) <- LS.loadEpee renderer "assets/epee.png" tmap17 smap17
+  (tmap19, smap19) <- LS.loadClef renderer "assets/clef.png" tmap18 smap18
 
   -- initialisation de l'état du jeu
   -- let gameState = M.initGameState
@@ -85,7 +86,7 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap18 smap18 kbd (M.initGameState carte) 0
+  gameLoop 10 renderer tmap19 smap19 kbd (M.initGameState carte) 0
 
 
 -------------------------------------------
@@ -142,7 +143,7 @@ refresh events kbd = K.handleEvent (head events) kbd
 -------------------------------------------
 
 gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState ->Int -> IO ()
-gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o carte) cpt= do
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o _ carte) cpt= do
   startTime <- time
   events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events

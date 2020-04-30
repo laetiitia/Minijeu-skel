@@ -1,6 +1,7 @@
 module Carte where
 
 import qualified Data.Map.Strict as M
+import Data.Maybe
 
 
 
@@ -170,6 +171,22 @@ caseAccesible x y map = case M.lookup (C x y) map of
     otherwise -> False
 
 
+changePorte :: Int -> Int -> Int -> M.Map Coord Case -> (M.Map Coord Case,Bool)
+changePorte x y cpt map = case cpt of
+  0 ->let res = (aux (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  1 ->let res = (aux (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  2 ->let res = (aux (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  3 ->let res = (aux (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
+
+
+
+
+aux :: Maybe Case -> Maybe Case
+aux c = case c of 
+  Just PorteEOFG -> Just PorteEOOG
+  Just PorteEOFD -> Just PorteEOOD
+  Just PorteNSF -> Just PorteNSO
+  x -> Nothing
 
 
 
