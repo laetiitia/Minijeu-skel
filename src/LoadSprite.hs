@@ -127,3 +127,17 @@ loadClef rdr path tmap smap = do
   let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "clef") (S.mkArea 0 0 50 50)
   let smap' = SM.addSprite (SpriteId "clef") sprite smap
   return (tmap', smap')
+
+loadTresor :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadTresor rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "tresor") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "tresor") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "tresor") sprite smap
+  return (tmap', smap')
+
+loadFantome :: Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadFantome rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId "Fantome") tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId "Fantome") (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId "Fantome") sprite smap
+  return (tmap', smap')

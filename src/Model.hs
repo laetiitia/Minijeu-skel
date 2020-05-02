@@ -17,10 +17,10 @@ import qualified Carte as C
 import Monster (Monstre)
 import qualified Monster as Mst
 
--- OUTILS
-import Outils (Outil)
-import Outils (Type)
-import qualified Outils as O
+-- ITEMS
+import Items (Item)
+import Items (Type)
+import qualified Items as I
 import Debug.Trace as T
 
 
@@ -30,14 +30,14 @@ data GameState = GameState { persoX :: Int
                            , clef :: Bool
                            , speed :: Int 
                            , monstres :: [Mst.Monstre] --Liste des monstres du gamestate
-                           , outils :: (M.Map Coord Outil) --Emplacement des Outils
+                           , items :: (M.Map Coord Item) --Emplacement des Items
                            , iniCarte :: Carte --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
                            , carte :: Carte --Carte courante du gamestate
                            }
 
 -- Initialise l'état du jeu
 initGameState :: Carte -> GameState
-initGameState carte = GameState 350 250 False False 50 (Mst.initMonstres 1) (O.initOutils [("epee",(200,200)),("clef",(300,300))]) carte carte
+initGameState (C.Carte larg haut contenu) = GameState 350 250 False False 50 (Mst.initMonstres 1 larg haut) (I.initItems [("epee",(200,200)),("clef",(300,300))]) (C.Carte larg haut contenu) (C.Carte larg haut contenu)
 
 
 -----------------------------
@@ -79,19 +79,19 @@ moveMonsters _ gs = gs
 ------------------------------
 -- *** MODIF ETAT *** --
 ------------------------------
-changeOutils :: GameState -> GameState
-changeOutils gs@(GameState px py e c _ _ outils _ _) | (O.isSword px py e outils || O.isKey px py c outils) = let (O.Outil id aff) = M.findWithDefault (O.Outil O.ErrorOutil False) (C.C px py) outils in case id of
-                                                                                                                                                    O.Epee -> let o = (O.changeOutils (C.C px py) O.Epee outils) in gs { epee = True, outils = o }
-                                                                                                                                                    O.Clef -> let o = (O.changeOutils (C.C px py) O.Clef outils) in gs { clef = True, outils = o }
+changeItems :: GameState -> GameState
+changeItems gs@(GameState px py e c _ _ items _ _) | (I.isSword px py e items || I.isKey px py c items) = let (I.Item id aff) = M.findWithDefault (I.Item I.ErrorItem False) (C.C px py) items in case id of
+                                                                                                                                                    I.Epee -> let o = (I.changeItems (C.C px py) I.Epee items) in gs { epee = True, items = o }
+                                                                                                                                                    I.Clef -> let o = (I.changeItems (C.C px py) I.Clef items) in gs { clef = True, items = o }
                                                                                                                                                     otherwise -> gs
                                             |otherwise = gs
 
 
 changeMonstres :: GameState -> GameState
-changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.testeMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
-                                                          | otherwise = gs
-changeMonstres gs@(GameState px py False _ _ monstres _ ini _) |Mst.testeMonstres px py monstres =  initGameState ini
-                                                           |otherwise = gs
+changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.collisionMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
+                                                            | otherwise = gs
+changeMonstres gs@(GameState px py False _ _ monstres _ ini _) | Mst.collisionMonstres px py monstres =  initGameState ini
+                                                               |otherwise = gs
 
 -- Permet d'ouvrir une porte si le perso a une clef
 activePorte :: GameState -> GameState
@@ -112,9 +112,9 @@ getEvent gstate keyb deltaTime (x : xs) = if K.keypressed x keyb then getEvent (
 
 -- Repercution de l'évement sur les elements de la gamestate
 moveTo :: RealFrac a => GameState -> Keycode -> a -> GameState
-moveTo gstate KeycodeZ deltaTime =  changeOutils (moveUp gstate)
-moveTo gstate KeycodeQ deltaTime =  changeOutils (moveLeft gstate)
-moveTo gstate KeycodeS deltaTime =  changeOutils (moveDown gstate)
-moveTo gstate KeycodeD deltaTime =  changeOutils (moveRight gstate)
+moveTo gstate KeycodeZ deltaTime =  changeItems (moveUp gstate)
+moveTo gstate KeycodeQ deltaTime =  changeItems (moveLeft gstate)
+moveTo gstate KeycodeS deltaTime =  changeItems (moveDown gstate)
+moveTo gstate KeycodeD deltaTime =  changeItems (moveRight gstate)
 moveTo gstate KeycodeK deltaTime =  activePorte gstate
 moveTo gstate _ _ = gstate

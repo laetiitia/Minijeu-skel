@@ -37,8 +37,8 @@ import qualified Model as M
 import Monster (Monstre)
 import qualified Monster as Mst
 
-import Outils (Outil)
-import qualified Outils as O
+import Items (Item)
+import qualified Items as I
 
 import Carte (Carte)
 import Carte (Coord)
@@ -71,6 +71,8 @@ main = do
   (tmap10, smap10) <- LS.loadEpee renderer "assets/epee.png" tmap9 smap9
   (tmap11, smap11) <- LS.loadClef renderer "assets/clef.jpg" tmap10 smap10
   (tmap12, smap12) <- LS.loadSkeleton renderer "assets/skeleton.png" tmap11 smap11
+  (tmap13, smap13) <- LS.loadFantome renderer "assets/fantome.png" tmap12 smap12
+  (tmap14, smap14) <- LS.loadTresor renderer "assets/tresor.png" tmap13 smap13
 
   -- initialisation de l'état du jeu
   -- let gameState = M.initGameState
@@ -81,7 +83,7 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap12 smap12 kbd (M.initGameState carte) 0
+  gameLoop 10 renderer tmap14 smap14 kbd (M.initGameState carte) 0
 
 
 -------------------------------------------
@@ -116,13 +118,13 @@ affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _ True) : xs) renderer t
                                                                                       affichageMonstres px py xs renderer tmap smap;}
 affichageMonstres px py ((Mst.Monster e (Carte.C x y) _ _ _) : xs) renderer tmap smap = affichageMonstres px py xs renderer tmap smap
 
-affichageOutils :: Int -> Int -> [(Coord,Outil)] -> Renderer -> TextureMap -> SpriteMap -> IO()
-affichageOutils px py [] renderer tmap smap = do {return ();}
-affichageOutils px py (((Carte.C x y),(O.Outil e True) ) : xs) renderer tmap smap = do {S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (O.typeToString e)) smap)
+affichageItems :: Int -> Int -> [(Coord,Item)] -> Renderer -> TextureMap -> SpriteMap -> IO()
+affichageItems px py [] renderer tmap smap = do {return ();}
+affichageItems px py (((Carte.C x y),(I.Item e True) ) : xs) renderer tmap smap = do {S.displaySprite renderer tmap (S.moveTo (SM.fetchSprite (SpriteId (I.typeToString e)) smap)
                                                                                                                     (fromIntegral (x-px+350))
                                                                                                                     (fromIntegral (y-py+250)));
-                                                                                  affichageOutils px py xs renderer tmap smap;}
-affichageOutils px py (((Carte.C x y),(O.Outil e _) ) : xs) renderer tmap smap = affichageOutils px py xs renderer tmap smap
+                                                                                  affichageItems px py xs renderer tmap smap;}
+affichageItems px py (((Carte.C x y),(I.Item e _) ) : xs) renderer tmap smap = affichageItems px py xs renderer tmap smap
 
 ------------------------------------------- 
 refresh::[Event] -> Keyboard -> Keyboard
@@ -149,7 +151,7 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o 
   affichageMap  x y (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
   affichagePerso x y e renderer tmap smap 
   affichageMonstres x y m renderer tmap smap
-  affichageOutils x y (Map.toList o) renderer tmap smap
+  affichageItems x y (Map.toList o) renderer tmap smap
   present renderer
   let gameState' = M.moveMonsters cpt gameState
   
