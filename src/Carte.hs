@@ -9,19 +9,13 @@ import Data.Maybe
 ------------- CASE --------------
 ---------------------------------
 
-data Case = Vide -- une case vide
+data Case = Vide -- une case vide (et porte ouverte)
   | Perso       --Id Personnage
-  | AngleBD     --Coin Mur Bas Gauche
-  | AngleBG     --Coin Mur Bas Droite
+  | AngleT     --Angle T Mur 
   | Horizontal  --Mur Horizontal
-  | VerticalG   --Mur Vertical Gauche
-  | VerticalD   --Mur Vertical Droit infranchissable (sauf pour les fantomes ...)
-  | PorteNSF    --Porte Nord Sud Fermé
-  | PorteEOFG   --Porte Est Ouest Fermé Gauche
-  | PorteEOFD   --Porte Est Ouest Fermé Droite
-  | PorteNSO    --Porte Nord Sud Ouverte
-  | PorteEOOG   --Porte Est Ouest Ouverte Gauche
-  | PorteEOOD   --Porte Est Ouest Ouverte Droite
+  | Vertical   --Mur Vertical  infranchissable (sauf pour les fantomes ...)
+  | PorteNS    --Porte Nord Sud (forcement fermé car ouvert = vide )
+  | PorteEO   --Porte Est Ouest (forcement fermé car ouvert = vide )
   deriving Eq
 
 
@@ -31,44 +25,32 @@ instance Show Case where
 
 associate :: Char -> Case
 associate x = case x of
-  '1' -> AngleBG
-  '3' -> AngleBD
-  '2' -> Horizontal
-  '4' -> VerticalG
-  '6' -> VerticalD
+  'T' -> AngleT
+  '=' -> Horizontal
+  '|' -> Vertical
   ' ' -> Vide
   '@' -> Perso
-  'a' -> PorteNSF
-  'b' -> PorteNSO
-  'c' -> PorteEOFD
-  'd' -> PorteEOOD
-  'e' -> PorteEOFG
-  'f' -> PorteEOOG
+  'n' -> PorteNS
+  'c' -> PorteEO
   otherwise -> Vide
 
 caseToName :: Case -> String
 caseToName x = case x of
-  AngleBG -> "angleBG"        --Coin Mur Bas Gauche
-  AngleBD -> "angleBD"        --Coin Mur Bas Droite
+  AngleT -> "angleT"        --Angle T Mur 
   Horizontal -> "Horizontal"  --Mur Horizontal
-  VerticalG -> "VerticalG"    --Mur Vertical Gauche
-  VerticalD -> "VerticalD"    --Mur Vertical Droit
+  Vertical -> "Vertical"    --Mur Vertical 
   Vide -> "sol"
   Perso -> "perso"
-  PorteEOFG -> "PorteEOFG"    --Porte Est Ouest Fermé Gauche
-  PorteEOOG -> "PorteEOOG"    --Porte Est Ouest Ouverte Gauche
-  PorteEOFD -> "PorteEOFD"    --Porte Est Ouest Fermé Droite
-  PorteEOOD -> "PorteEOOD"    --Porte Est Ouest Ouverte Droite
-  PorteNSF -> "PorteNSF"      --Porte Nord Sud Fermé
-  PorteNSO -> "PorteNSO"      --Porte Nord Sud Ouverte
+  PorteEO -> "PorteEO"    --Porte Est Ouest 
+  PorteNS -> "PorteNS"      --Porte Nord Sud 
 
 -- Verifie que la case soit un mur
 isWall :: Case -> Bool
-isWall c = (c == AngleBD) || (c == AngleBG) || (c == Horizontal) || (c == VerticalG) || (c == VerticalD) 
+isWall c = (c == AngleT) || (c == Horizontal) || (c == Vertical) 
 
 -- Verifie que c'est une porte
 isDoor :: Case -> Bool
-isDoor c = (c == PorteEOFG) || (c == PorteEOOG) || (c == PorteEOFD) || (c == PorteEOOD) || (c == PorteNSF) || (c == PorteNSO) 
+isDoor c = (c == PorteEO) || (c == PorteNS) 
 
 ---------------------------------
 ------------ COORD --------------
@@ -123,7 +105,7 @@ propCaseCarte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase []
 propCasePorte :: Carte -> Bool
 propCasePorte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
   where checkCase (C cx cy) val acc = (if (isDoor val)
-                                        then (if (val == PorteNSF || val == PorteNSO)
+                                        then (if (val == PorteNS)
                                           then (checkWall (C (cx-50) cy) contenu):(checkWall (C (cx+50) cy) contenu):acc
                                           else (checkWall (C cx (cy-50)) contenu):(checkWall (C cx (cy+50)) contenu):acc )
                                         else acc)
@@ -166,26 +148,22 @@ readCarte txt = let (x, y) = (getFormat txt) in Carte (x*50) (y*50) (initMapFrom
 caseAccesible :: Int -> Int -> M.Map Coord Case -> Bool
 caseAccesible x y map = case M.lookup (C x y) map of
     Just Vide -> True
-    Just PorteEOOD -> True
-    Just PorteNSO -> True
     otherwise -> False
 
-
+-- Cherche la porte autours des coordonnées pour l'ouvrir
 changePorte :: Int -> Int -> Int -> M.Map Coord Case -> (M.Map Coord Case,Bool)
 changePorte x y cpt map = case cpt of
-  0 ->let res = (aux (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  1 ->let res = (aux (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  2 ->let res = (aux (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  3 ->let res = (aux (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
+  0 ->let res = (openDoor (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  1 ->let res = (openDoor (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  2 ->let res = (openDoor (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  3 ->let res = (openDoor (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
 
 
-
-
-aux :: Maybe Case -> Maybe Case
-aux c = case c of 
-  Just PorteEOFG -> Just PorteEOOG
-  Just PorteEOFD -> Just PorteEOOD
-  Just PorteNSF -> Just PorteNSO
+-- Ouvre la porte fermé ( ouverture = Case Vide)
+openDoor :: Maybe Case -> Maybe Case
+openDoor c = case c of 
+  Just PorteEO -> Just Vide
+  Just PorteNS -> Just Vide
   x -> Nothing
 
 

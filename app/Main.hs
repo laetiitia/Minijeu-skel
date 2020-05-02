@@ -60,22 +60,17 @@ main = do
 
   -- chargement des sprites
   (tmap', smap') <- LS.loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
-  (tmap4, smap4) <- LS.loadangleBD renderer "assets/texture/angleBD.png" tmap' smap'
-  (tmap5, smap5) <- LS.loadangleBG renderer "assets/texture/angleBG.png" tmap4 smap4
-  (tmap6, smap6) <- LS.loadSol renderer "assets/texture/sol.png" tmap5 smap5
-  (tmap7, smap7) <- LS.loadHorizontal renderer "assets/texture/horizontal.png" tmap6 smap6
-  (tmap8, smap8) <- LS.loadVerticalD renderer "assets/texture/verticalD.png" tmap7 smap7
-  (tmap9, smap9) <- LS.loadVerticalG renderer "assets/texture/verticalG.png" tmap8 smap8
-  (tmap10, smap10) <- LS.loadPorteEOFG renderer "assets/texture/PorteEOFG.png" tmap9 smap9
-  (tmap11, smap11) <- LS.loadPorteEOOG renderer "assets/texture/PorteEOOG.png" tmap10 smap10
-  (tmap12, smap12) <- LS.loadPorteNSF renderer "assets/texture/walls.png" tmap11 smap11
-  (tmap13, smap13) <- LS.loadPorteNSO renderer "assets/texture/porteO.png" tmap12 smap12
-  (tmap14, smap14) <- LS.loadOrc renderer "assets/orc.png" tmap13 smap13
-  (tmap15, smap15) <- LS.loadPorteEOOD renderer "assets/texture/PorteEOOD.png" tmap14 smap14
-  (tmap16, smap16) <- LS.loadPorteEOFD renderer "assets/texture/PorteEOFD.png" tmap15 smap15
-  (tmap17, smap17) <- LS.loadPerso2 renderer "assets/perso2.png" tmap16 smap16
-  (tmap18, smap18) <- LS.loadEpee renderer "assets/epee.png" tmap17 smap17
-  (tmap19, smap19) <- LS.loadClef renderer "assets/clef.png" tmap18 smap18
+  (tmap2, smap2) <- LS.loadangleT renderer "assets/texture/angleT.png" tmap' smap'
+  (tmap3, smap3) <- LS.loadSol renderer "assets/texture/sol.png" tmap2 smap2
+  (tmap4, smap4) <- LS.loadHorizontal renderer "assets/texture/Horizontal.png" tmap3 smap3
+  (tmap5, smap5) <- LS.loadVertical renderer "assets/texture/Vertical.png" tmap4 smap4
+  (tmap6, smap6) <- LS.loadPorteEO renderer "assets/texture/porteEO.png" tmap5 smap5
+  (tmap7, smap7) <- LS.loadPorteNS renderer "assets/texture/porteNS.png" tmap6 smap6
+  (tmap8, smap8) <- LS.loadOrc renderer "assets/orc.png" tmap7 smap7
+  (tmap9, smap9) <- LS.loadPerso2 renderer "assets/perso2.png" tmap8 smap8
+  (tmap10, smap10) <- LS.loadEpee renderer "assets/epee.png" tmap9 smap9
+  (tmap11, smap11) <- LS.loadClef renderer "assets/clef.jpg" tmap10 smap10
+  (tmap12, smap12) <- LS.loadSkeleton renderer "assets/skeleton.png" tmap11 smap11
 
   -- initialisation de l'état du jeu
   -- let gameState = M.initGameState
@@ -86,7 +81,7 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap19 smap19 kbd (M.initGameState carte) 0
+  gameLoop 10 renderer tmap12 smap12 kbd (M.initGameState carte) 0
 
 
 -------------------------------------------

@@ -29,10 +29,10 @@ data GameState = GameState { persoX :: Int
                            , epee :: Bool
                            , clef :: Bool
                            , speed :: Int 
-                           , monstres :: [Mst.Monstre]
-                           , outils :: (M.Map Coord Outil)
-                           ,iniCarte :: Carte
-                           , carte :: Carte
+                           , monstres :: [Mst.Monstre] --Liste des monstres du gamestate
+                           , outils :: (M.Map Coord Outil) --Emplacement des Outils
+                           , iniCarte :: Carte --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
+                           , carte :: Carte --Carte courante du gamestate
                            }
 
 -- Initialise l'état du jeu
@@ -93,9 +93,9 @@ changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.testeMonstres 
 changeMonstres gs@(GameState px py False _ _ monstres _ ini _) |Mst.testeMonstres px py monstres =  initGameState ini
                                                            |otherwise = gs
 
-
+-- Permet d'ouvrir une porte si le perso a une clef
 activePorte :: GameState -> GameState
-activePorte gs@(GameState px py _ True sp _ _ _ (C.Carte l h contenue)) =let (map,b)=(C.changePorte px py 0 contenue) in if b then gs{carte = (C.Carte l h map),clef = False}else gs{carte = (C.Carte l h map)}
+activePorte gs@(GameState px py _ True sp _ _ _ (C.Carte l h contenue)) =let (map,b)=(C.changePorte px py 0 contenue) in if b then gs{carte = (C.Carte l h map), clef = False} else gs{carte = (C.Carte l h map)}
 activePorte gs = gs
 
 --------------------------------

@@ -1,7 +1,5 @@
 module Monster where
 
-import SDL
-
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import Carte (Coord)
@@ -9,9 +7,9 @@ import qualified Carte as C
 
 data Espece = 
     Orc
--- | Skeleton
+    | Skeleton
 
-data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int,affichage :: Bool}
+data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int, affichage :: Bool}
 
 
 ----- MONSTER FUNCTIONS -----
@@ -19,7 +17,13 @@ data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: I
 especeToString :: Espece -> String
 especeToString e = case e of
     Orc -> "Orc"
--- Skeleton -> "Skeleton"
+    Skeleton -> "Skeleton"
+
+-- Permet de recuperer selon l'espece le nombre deplacement par mouvement
+getCptInit :: Espece -> Int
+getCptInit e = case e of
+    Orc -> 3
+    Skeleton -> 2
 
 
 -- Represente le chemin du monstre (decrit dans une liste de direction)
@@ -27,7 +31,7 @@ getMonsterPattern :: Espece -> [String]
 getMonsterPattern esp =
     case esp of
         Orc -> ["Haut", "Droite", "Bas", "Gauche"]
--- Skeleton -> ["Droite", "Droite", "Haut","Gauche", "Haut", "Haut", "Gauche","Bas","Bas"]
+        Skeleton -> ["Haut", "Bas"]
 
 
 -- Modifie la coordonée en fonction de la direction
@@ -44,13 +48,13 @@ moveToDir str (C.C x y) =
 -- Initialise le monstre
 initMonstres ::Int -> [Monstre]
 initMonstres 0 = []
-initMonstres x = (Monster Orc (C.C 250 250) 0 3 True): (initMonstres (x - 1))
+initMonstres x = (Monster Orc (C.C 250 250) 0 (getCptInit Orc) True):(Monster Skeleton (C.C 1150 500) 0 (getCptInit Skeleton) True): (initMonstres (x - 1))
 
 
 -- Modifie les coordonnées du monstre selon son pattern
 moveMonster :: Monstre -> Monstre
-moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern Orc))) 3 a) 
-                                            | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern Orc)!!index) (C.C x y) ) index (cpt-1) a)
+moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
+                                            | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
                                             | otherwise = mo
 
 
