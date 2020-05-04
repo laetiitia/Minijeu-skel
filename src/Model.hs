@@ -110,7 +110,7 @@ getEvent gstate keyb deltaTime (x : []) = if K.keypressed x keyb then changeMons
 getEvent gstate keyb deltaTime (x : xs) = if K.keypressed x keyb then getEvent (changeMonstres (moveTo gstate x deltaTime)) keyb deltaTime xs
                                                                  else getEvent (changeMonstres gstate) keyb deltaTime xs 
 
--- Repercution de l'évement sur les elements de la gamestate
+-- Repercution de l'évenement sur les elements de la gamestate
 moveTo :: RealFrac a => GameState -> Keycode -> a -> GameState
 moveTo gstate KeycodeZ deltaTime =  changeItems (moveUp gstate)
 moveTo gstate KeycodeQ deltaTime =  changeItems (moveLeft gstate)

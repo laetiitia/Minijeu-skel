@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b40ca5783aa35d3c09f5675679a7eac0a055fffcdf45b5587f1b0e4a4a70d0d1
+-- hash: bfd246dca962874977db4548f3189841620730f7b295ba553792b1dac76d8ad6
 
 name:           minijeu
 version:        0.1.0.0
@@ -43,6 +43,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , hspec
     , linear
     , random
     , sdl2
@@ -59,6 +60,7 @@ executable minijeu-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , hspec
     , linear
     , minijeu
     , random
@@ -78,6 +80,7 @@ test-suite minijeu-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , hspec
     , linear
     , minijeu
     , random

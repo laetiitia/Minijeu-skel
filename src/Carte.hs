@@ -67,7 +67,7 @@ instance Show Coord where
 
 -- Verifie que les coordonnées soit positif et qu'ils soient conforme à la hauteur et largeur
 propCoord :: Coord -> Int -> Int -> Bool
-propCoord (C cx cy) h l = 0 <= cx && cx <= l && 0 <= cy && cy <= h
+propCoord (C cx cy) h l = 0 <= cx && cx <= l && 0 <= cy && cy <= h 
 
 
 ---------------------------------
@@ -88,11 +88,12 @@ propCarte carte = (propTailleCarte carte) && (propCaseCarte carte) && (propCaseP
 
 -- Verifie que:
 -- la hauteur et largeur de la carte par rapport aux nombres de cases
+-- et ainsi leur existance
 propTailleCarte :: Carte -> Bool
 propTailleCarte (Carte larg haut contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
 
 -- Verifie que:
--- chaque case existe et que les coordonnées soient correctes
+-- chaque case possede des coordonnées correctes
 -- que la carte soit bien entouré de mur
 propCaseCarte :: Carte -> Bool
 propCaseCarte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
@@ -112,7 +113,9 @@ propCasePorte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase []
 
 -- Verifie dans les coordonnées de cases si cette coordonnée correspond bien a un mur
 checkWall :: Coord -> M.Map Coord Case -> Bool
-checkWall c cases = let (Just res)= M.lookup c cases in isWall res 
+checkWall c cases = case M.lookup c cases of
+  (Just v) -> isWall v
+  otherwise -> False 
 
 -- Realise un 'and' sur tout les elements de la liste
 listAnd :: [Bool] -> Bool
