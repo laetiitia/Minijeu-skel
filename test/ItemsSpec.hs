@@ -90,13 +90,17 @@ typeToStringSpec = do
             I.typeToString I.ErrorItem
             `shouldBe` "ErrorItem"
 
---initSpeck = do
-  --  describe "verifie ques les entré sont valide" $ do
-    --it "liste valide" $ do
-      --  list <- 
+prop_initItem_inv :: Property
+prop_initItem_inv = forAll genTypeOk $ I.propIdValide
+
+initSpeck = do
+    describe "verifie ques les entré sont valide" $ do
+        it "liste valide" $
+            property prop_initItem_inv 
 
 
 cFunSpec = do 
     isSwordSpec
     isKeySpec
     typeToStringSpec
+    initSpeck
