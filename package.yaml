@@ -27,6 +27,7 @@ dependencies:
 - sdl2-image
 - random
 - hspec
+- QuickCheck
 
 library:
   source-dirs: src

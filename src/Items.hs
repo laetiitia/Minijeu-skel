@@ -32,6 +32,16 @@ initItems ((id,(x,y)):xs)  | id == "clef" = M.insert (C.C x y) (Item Clef True) 
                            | id == "epee" = M.insert (C.C x y) (Item Epee True) (initItems xs)        
                            | id == "tresor" = M.insert (C.C x y) (Item Tresor True) (initItems xs)                   
 
+propIdValide :: [(String,(Int,Int))] -> Bool
+propIdValide ((id,(x,y)):[]) | id == "clef" = True
+                             | id == "epee" = True
+                             | id == "tresor" = True
+                             | otherwise = False
+propIdValide ((id,(x,y)):xs)  | id == "clef" = propIdValide xs
+                             | id == "epee" = propIdValide xs
+                             | id == "tresor" = propIdValide xs
+                             | otherwise = False
+
 
 
 -- Verifie si c'est une épée ou non 
@@ -40,6 +50,7 @@ isSword x y False map = case M.lookup (C.C x y) map of
     Just (Item Epee True) -> True
     otherwise -> False
 isSword x y b map = False
+
 -- Verifie si c'est une clé ou non
 isKey :: Int -> Int -> Bool -> M.Map Coord Item -> Bool
 isKey x y False map = case M.lookup (C.C x y) map of

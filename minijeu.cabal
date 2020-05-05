@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bfd246dca962874977db4548f3189841620730f7b295ba553792b1dac76d8ad6
+-- hash: 63af1747417288523039ffb545dfdf32f6e8aa18b712785f25db1822a10eeb5a
 
 name:           minijeu
 version:        0.1.0.0
@@ -41,7 +41,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , containers
     , hspec
     , linear
@@ -58,7 +59,8 @@ executable minijeu-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , containers
     , hspec
     , linear
@@ -73,12 +75,21 @@ test-suite minijeu-test
   main-is: Spec.hs
   other-modules:
       CarteSpec
+      ItemsSpec
+      KeyboardSpec
+      LoadSpriteSpec
+      ModelSpec
+      MonsterSpec
+      SpriteMapSpec
+      SpriteSpec
+      TextureMapSpec
       Paths_minijeu
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , containers
     , hspec
     , linear
