@@ -28,10 +28,13 @@ initItems :: [(String,(Int,Int))] -> M.Map Coord Item
 initItems ((id,(x,y)):[])  | id == "clef" = M.singleton (C.C x y) (Item Clef True)
                            | id == "epee" = M.singleton (C.C x y) (Item Epee True)
                            | id == "tresor" = M.singleton (C.C x y) (Item Tresor True)
+                           | otherwise = M.empty
 initItems ((id,(x,y)):xs)  | id == "clef" = M.insert (C.C x y) (Item Clef True) (initItems xs)
                            | id == "epee" = M.insert (C.C x y) (Item Epee True) (initItems xs)        
                            | id == "tresor" = M.insert (C.C x y) (Item Tresor True) (initItems xs)                   
+                           | otherwise = initItems xs
 
+                           
 propIdValide :: (String,(Int,Int)) -> Bool
 propIdValide (id,(x,y)) | id == "clef" = True
                              | id == "epee" = True

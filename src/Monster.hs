@@ -47,13 +47,29 @@ moveToDir str (C.C x y) =
         "Gauche" -> (C.C (x - 50) y)
         "Bas" -> (C.C x (y + 50))
 
+propMoveToDir ::String -> Bool
+propMoveToDir str =
+    case str of 
+        "Haut" -> True
+        "Droite" -> True
+        "Gauche" -> True
+        "Bas" -> True
+        x -> False
 
 
--- Initialise le monstre
-initMonstres ::Int -> Int -> Int -> [Monstre]
-initMonstres 0 _ _ = []
-initMonstres x l h = (Monster Orc (C.C 250 250) 0 (getCptInit Orc) True):(Monster Skeleton (C.C 1150 500) 0 (getCptInit Skeleton) True):(Monster Fantome (C.C 50 50) 0 (getCptInit Fantome) True): (initMonstres (x - 1) l h)
+initMonstres :: [((Int,Int),String)] -> [Monstre]
+initMonstres (((x,y),str):[]) | str == "Orc" = [(Monster Orc (C.C x y) 0 (getCptInit Orc) True)]
+                              | str == "Skeleton" = [(Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True)]
+                              | str == "Fantome" = [(Monster Fantome (C.C x y) 0 (getCptInit Fantome) True)]
+initMonstres (((x,y),str):xs) | str == "Orc" = (Monster Orc (C.C x y) 0 (getCptInit Orc) True): (initMonstres xs)
+                              | str == "Skeleton" = (Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True) : (initMonstres xs)
+                              | str == "Fantome" = (Monster Fantome (C.C x y) 0 (getCptInit Fantome) True) : (initMonstres xs)
 
+propMonstreValide :: ((Int,Int),String) -> Bool
+propMonstreValide ((x,y),id) | id == "Orc" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+                             | id == "Skeleton" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+                             | id == "Fantome" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+                             | otherwise = False
 
 -- Modifie les coordonnées du monstre selon son pattern
 moveMonster :: Monstre -> Monstre
@@ -61,6 +77,9 @@ moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C
                                             | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
                                             | otherwise = mo
 
+moveMonster_post :: Monstre -> Bool
+moveMonster_post mo@(Monster m (C.C x y) index cpt a) | ((mod x 5) == 0) && ((mod y 5) == 0) = True
+                                                      | otherwise = False
 
 -- Modifie les coordonnées d'une liste des monstres
 moveAllMonster :: [Monstre] -> [Monstre]
@@ -75,6 +94,9 @@ elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==y 
                                                             | otherwise = ((Monster m (C.C x y) index cpt a):(elimineMonstres px py xs))
 elimineMonstres px py [] = []
 
+elimineMonstres_pre :: Int -> Int -> Bool
+elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
+                          | otherwise = False
  
 -- Verifie si un des monstres est en collision selon les coordonnées x et y donnée
 collisionMonstres :: Int -> Int -> [Monstre] -> Bool

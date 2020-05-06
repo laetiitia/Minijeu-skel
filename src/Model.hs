@@ -37,7 +37,7 @@ data GameState = GameState { persoX :: Int
 
 -- Initialise l'état du jeu
 initGameState :: Carte -> GameState
-initGameState (C.Carte larg haut contenu) = GameState 350 250 False False 50 (Mst.initMonstres 1 larg haut) (I.initItems [("epee",(200,200)),("clef",(300,300))]) (C.Carte larg haut contenu) (C.Carte larg haut contenu)
+initGameState (C.Carte larg haut contenu) = GameState 350 250 False False 50 (Mst.initMonstres [((250,250),"Orc"),((1150,500),"Skeleton"),((50,50),"Fantome")]) (I.initItems [("epee",(200,200)),("clef",(300,300))]) (C.Carte larg haut contenu) (C.Carte larg haut contenu)
 
 
 -----------------------------

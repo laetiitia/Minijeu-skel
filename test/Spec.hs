@@ -17,7 +17,7 @@ main = hspec $ do
  --   KS.cFunSpec
  --   LS.cFunSpec
 --    MODS.cFunSpec
- --   MONS.cFunSpec
+    MONS.cFunSpec
 --    SMS.cFunSpec
  --   SS.cFunSpec
  --   TS.cFunSpec
