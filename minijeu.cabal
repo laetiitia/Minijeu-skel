@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63af1747417288523039ffb545dfdf32f6e8aa18b712785f25db1822a10eeb5a
+-- hash: 7d971fabc0bf852f693a2e47e44eaa9f7473976fff5c6486d2ee14233cc41005
 
 name:           minijeu
 version:        0.1.0.0
@@ -76,13 +76,8 @@ test-suite minijeu-test
   other-modules:
       CarteSpec
       ItemsSpec
-      KeyboardSpec
-      LoadSpriteSpec
       ModelSpec
       MonsterSpec
-      SpriteMapSpec
-      SpriteSpec
-      TextureMapSpec
       Paths_minijeu
   hs-source-dirs:
       test

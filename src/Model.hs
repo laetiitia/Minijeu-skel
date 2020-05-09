@@ -64,7 +64,9 @@ moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | py < h && (C
                                 | otherwise = gs
 
 
-
+move_post :: GameState -> Bool
+move_post (GameState px py _ _ _ _ _ _ (C.Carte l h _)) | px >= 0 && py>=0 && px <= l && py <= h = True
+                                                        | otherwise = False
 
 ------------------------------
 -- *** AUTRE DELACEMENT *** --

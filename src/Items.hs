@@ -15,6 +15,9 @@ data Type =
 
 data Item = Item {id :: Type, affichage :: Bool}
 
+prop_inv_Item :: Item -> Bool
+prop_inv_Item (Item ErrorItem aff) = False
+prop_inv_Item (Item id  aff ) = True
 
 typeToString :: Type -> String
 typeToString id = case id of
@@ -35,13 +38,15 @@ initItems ((id,(x,y)):xs)  | id == "clef" = M.insert (C.C x y) (Item Clef True) 
                            | otherwise = initItems xs
 
                            
-propIdValide :: (String,(Int,Int)) -> Bool
-propIdValide (id,(x,y)) | id == "clef" = True
-                             | id == "epee" = True
-                             | id == "tresor" = True
-                             | id == "ErrorItem" = True
+prop_pre_initItems :: [(String,(Int,Int))] -> Bool
+prop_pre_initItems ((id,(x,y)):[]) | id == "clef" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+                             | id == "epee" && ((mod x 5) == 0) && ((mod y 5) == 0)  = True
+                             | id == "tresor" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
                              | otherwise = False
-
+prop_pre_initItems ((id,(x,y)):xs) | id == "clef" && ((mod x 5) == 0) && ((mod y 5) == 0) = prop_pre_initItems xs
+                             | id == "epee" && ((mod x 5) == 0) && ((mod y 5) == 0)  = prop_pre_initItems xs
+                             | id == "tresor" && ((mod x 5) == 0) && ((mod y 5) == 0) = prop_pre_initItems xs
+                             | otherwise = False
 
 
 -- Verifie si c'est une épée ou non 
@@ -61,3 +66,7 @@ isKey x y b map = False
 -- Desactive l'affichage de l'item
 changeItems :: Coord -> Type -> M.Map Coord Item -> M.Map Coord Item
 changeItems c t map = M.insert c (Item t False) map
+
+prop_pre_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
+prop_pre_changeItems (C.C x y) t map | y>=0 && x>=0 && ((mod x 5) == 0) && ((mod y 5) == 0) && ((isKey x y False map)||(isSword x y False map)) = True
+prop_pre_changeItems c t map = False

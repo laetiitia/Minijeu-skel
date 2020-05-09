@@ -98,6 +98,9 @@ elimineMonstres_pre :: Int -> Int -> Bool
 elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
                           | otherwise = False
  
+collisionMonstres_pre :: Int -> Int -> Bool
+collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
+                          | otherwise = False
 -- Verifie si un des monstres est en collision selon les coordonnées x et y donnée
 collisionMonstres :: Int -> Int -> [Monstre] -> Bool
 collisionMonstres px py ((Monster m (C.C x y) index cpt a):[])| px == x && py ==y && a= True
