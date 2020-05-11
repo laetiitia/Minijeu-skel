@@ -45,6 +45,62 @@ isKeySpec = do
             I.isKey 0 0 False (M.singleton (C.C 0 0) (I.Item I.Epee True))
             `shouldBe` False
 
+changeItemsSpec = do 
+    describe "Verifie changeItems" $ do
+        it "pre condition coordonner inchoérente "  $ do 
+            I.prop_pre_coord_changeItems (C.C 47 (-2)) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
+            `shouldBe` False
+        it "pre condition coordonner correcte" $ do
+            I.prop_pre_coord_changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
+            `shouldBe` True
+        it "pre condition case non presente " $ do
+            I.prop_pre_exist_changeItems (C.C 150 200) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
+            `shouldBe` False
+        it "pre condition case presente" $ do
+            I.prop_pre_exist_changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
+            `shouldBe` True
+        it "post condition Type incorrecte" $ do
+            I.prop_post_changeItems (C.C 50 50) I.Clef (I.changeItems (C.C 50 50) I.ErrorItem (M.fromList [((C.C 50 50),(I.Item I.Clef False))]))
+            `shouldBe` False
+        it "post condition Type correcte" $ do
+            I.prop_post_changeItems (C.C 50 50) I.Clef (I.changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))]))
+            `shouldBe` True
+
+initItemsSpec = do
+    describe "Verifie initItems" $ do
+        it "pre condition Type d'entré valide et coordonnée valide" $ do
+           I.prop_pre_initItems [("clef",(50,50)),("epee",(100,100)),("tresor",(150,150))]
+           `shouldBe` True 
+        it "pre condition Type d'entré valide et coordonnée invalide" $ do
+           I.prop_pre_initItems [("clef",(30,50)),("epee",(100,100)),("tresor",(150,150))]
+           `shouldBe` False
+        it "pre condition Type d'entré invalide et coordonnée valide" $ do
+           I.prop_pre_initItems [("bob",(50,50)),("epee",(100,100)),("tresor",(150,150))]
+           `shouldBe` False
+        it "pre condition Type d'entré invalide et coordonnée invalide" $ do
+           I.prop_pre_initItems [("clef",(30,50)),("bob",(100,100)),("tresor",(150,150))]
+           `shouldBe` False
+        it "post condition verification de l'invariant" $ do
+           I.prop_post_initItems (I.initItems [("clef",(50,50)),("epee",(100,100)),("tresor",(150,150))])
+           `shouldBe` True
+        it "post condition sur résultat incohérant" $ do
+           I.prop_post_initItems (M.fromList [((C.C 50 50),(I.Item I.Clef False)),((C.C 100 50),(I.Item I.ErrorItem False))])
+           `shouldBe` False
+invarianSpec = do
+    describe "verifie un Item" $ do
+        it "un item de Type valide" $ do
+            I.prop_inv_ItemType (I.Item I.Epee True)
+            `shouldBe` True
+        it "un item de Type invalide" $ do
+            I.prop_inv_ItemType (I.Item I.ErrorItem True)
+            `shouldBe` False
+
+cFunSpec = do 
+    isSwordSpec
+    isKeySpec
+    changeItemsSpec
+    initItemsSpec
+    invarianSpec
 
 {--
 genItemsOk ::Bool -> Gen I.Item
@@ -94,9 +150,5 @@ initSpeck = do
             property prop_initItem_inv 
 --}
 
-cFunSpec = do 
-    isSwordSpec
-    isKeySpec
-    --typeToStringSpec
-    --initSpeck 
+
 

@@ -129,7 +129,7 @@ collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 5
 
 
 --- ** Generate Monster ** ---
-chooseMonsters :: Int -> String
+{--chooseMonsters :: Int -> String
 chooseMonsters i =
     case i of
         1 -> "Orc"
@@ -145,4 +145,4 @@ genMonstresOk = do
     return $ (((x*50),(y*50)),chooseMonsters i)
 
 prop_initMonstres_inv :: Property
-prop_initMonstres_inv = forAll genMonstresOk $ prop_MonstreValide
+prop_initMonstres_inv = forAll genMonstresOk $ prop_MonstreValide--}

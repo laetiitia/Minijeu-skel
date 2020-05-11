@@ -7,7 +7,7 @@ import qualified Carte as C
 import Monster as Mon
 import qualified Data.Map.Strict as M
 
-
+{--
 initSpeck = do
     describe "Verifie l'initialisation des monstres" $ do
         it "liste Monstre valide" $
@@ -15,4 +15,4 @@ initSpeck = do
 
 
 cFunSpec = do 
-    initSpeck
+    initSpeck--}

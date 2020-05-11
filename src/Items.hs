@@ -11,6 +11,7 @@ data Type =
     | Clef
     | Tresor
     | ErrorItem
+    deriving (Eq)
 
 
 data Item = Item {id :: Type, affichage :: Bool}
@@ -57,6 +58,9 @@ prop_pre_initItems ((id,(x,y)):xs) | id == "clef" && ((mod x 50) == 0) && ((mod 
                              | id == "tresor" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
                              | otherwise = False
 
+prop_post_initItems :: M.Map Coord Item -> Bool
+prop_post_initItems m = M.foldr (\x y -> (prop_inv_ItemType x) &&  y) True m
+
 
 -- Verifie si c'est une épée ou non 
 isSword :: Int -> Int ->Bool -> M.Map Coord Item -> Bool
@@ -76,7 +80,21 @@ isKey x y b map = False
 changeItems :: Coord -> Type -> M.Map Coord Item -> M.Map Coord Item
 changeItems c t map = M.insert c (Item t False) map
 
+aux_pre_coord_prop :: Coord ->  M.Map Coord Item -> Bool
+aux_pre_coord_prop c map = case M.lookup c map of
+    Just i -> True
+    otherwise -> False 
 
-prop_pre_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
-prop_pre_changeItems (C.C x y) t map = (y>=0 && x>=0 && ((mod x 50) == 0) && ((mod y 50) == 0) && ((isKey x y False map)||(isSword x y False map))) 
-prop_pre_changeItems c t map = False
+prop_pre_coord_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
+prop_pre_coord_changeItems c@(C.C x y) t map = (y>=0 && x>=0 && ((mod x 50) == 0) && ((mod y 50) == 0) && (aux_pre_coord_prop c map)) 
+
+prop_pre_exist_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
+prop_pre_exist_changeItems (C.C x y) t map = case M.lookup (C.C x y) map of
+    Just (Item tp _) -> tp == t 
+    otherwise -> False
+
+
+prop_post_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
+prop_post_changeItems (C.C x y) t map = case M.lookup (C.C x y) map of
+     Just i -> prop_inv_ItemType i
+     otherwise -> False

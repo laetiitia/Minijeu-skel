@@ -8,5 +8,5 @@ import MonsterSpec as MONS
 main :: IO ()
 main = hspec $ do
     CS.cFunSpec
-    --IS.cFunSpec
-    MONS.cFunSpec
+    IS.cFunSpec
+   -- MONS.cFunSpec
