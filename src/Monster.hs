@@ -61,8 +61,8 @@ moveToDir str (C.C x y) =
         "Gauche" -> (C.C (x - 50) y)
         "Bas" -> (C.C x (y + 50))
 
-prop_MoveToDir ::String -> Bool
-prop_MoveToDir str =
+prop_pre_MoveToDir ::String -> Bool
+prop_pre_MoveToDir str =
     case str of 
         "Haut" -> True
         "Droite" -> True
@@ -79,10 +79,14 @@ initMonstres (((x,y),str):xs) | str == "Orc" = (Monster Orc (C.C x y) 0 (getCptI
                               | str == "Skeleton" = (Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True) : (initMonstres xs)
                               | str == "Fantome" = (Monster Fantome (C.C x y) 0 (getCptInit Fantome) True) : (initMonstres xs)
 
-prop_MonstreValide :: ((Int,Int),String) -> Bool
-prop_MonstreValide ((x,y),id) | id == "Orc" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
-                             | id == "Skeleton" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
-                             | id == "Fantome" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+prop_pre_MonstreValide :: [((Int,Int),String)] -> Bool
+prop_pre_MonstreValide (((x,y),id):[]) | id == "Orc" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
+                             | id == "Skeleton" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
+                             | id == "Fantome" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
+                             | otherwise = False
+prop_pre_MonstreValide (((x,y),id):xs) | id == "Orc" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
+                             | id == "Skeleton" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
+                             | id == "Fantome" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
                              | otherwise = False
 
 -- Modifie les coordonnées du monstre selon son pattern
@@ -91,8 +95,8 @@ moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C
                                             | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
                                             | otherwise = mo
 
-moveMonster_post :: Monstre -> Bool
-moveMonster_post mo@(Monster m (C.C x y) index cpt a) | ((mod x 50) == 0) && ((mod y 50) == 0) = True
+prop_moveMonster :: Monstre -> Bool
+prop_moveMonster mo@(Monster m (C.C x y) index cpt a) | ((mod x 50) == 0) && ((mod y 50) == 0) && x>=0 && y>=0 && cpt>=0 = True
                                                       | otherwise = False
 
 
@@ -114,8 +118,8 @@ elimineMonstres px py [] = []
 
 
 
-elimineMonstres_pre :: Int -> Int -> Bool
-elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
+prop_elimineMonstres_pre :: Int -> Int -> Bool
+prop_elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
                           | otherwise = False
  
 
@@ -131,8 +135,8 @@ collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==
                                                            | otherwise = (collisionMonstres px py xs)
 
  
-collisionMonstres_pre :: Int -> Int -> Bool
-collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
+prop_collisionMonstres_pre :: Int -> Int -> Bool
+prop_collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
                             | otherwise = False
 
 
