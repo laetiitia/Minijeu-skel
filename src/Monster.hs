@@ -13,6 +13,18 @@ data Espece =
 data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int, affichage :: Bool}
 
 
+----- INVARIANT MONSTRE -----
+
+prop_inv_coord_monstre :: Monstre -> Bool
+prop_inv_coord_monstre (Monster _ (C.C x y) _ _ _) = y>=0 && x>=0 && ((mod x 50) == 0) && ((mod y 50) == 0)
+
+prop_inv_direction_monstre :: Monstre -> Bool
+prop_inv_direction_monstre (Monster m _ direction _ _) = direction < (length (getMonsterPattern m))
+
+prop_inv_cpt_monstre :: Monstre -> Bool
+prop_inv_cpt_monstre (Monster m _ _ cpt _) = cpt>=0 && cpt <= (getCptInit m)
+
+
 ----- MONSTER FUNCTIONS -----
 
 -- Retourne le string liée au type du monstre
@@ -80,7 +92,7 @@ moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C
                                             | otherwise = mo
 
 moveMonster_post :: Monstre -> Bool
-moveMonster_post mo@(Monster m (C.C x y) index cpt a) | ((mod x 5) == 0) && ((mod y 5) == 0) = True
+moveMonster_post mo@(Monster m (C.C x y) index cpt a) | ((mod x 50) == 0) && ((mod y 50) == 0) = True
                                                       | otherwise = False
 
 
