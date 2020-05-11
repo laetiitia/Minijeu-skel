@@ -81,10 +81,14 @@ moveMonster_post :: Monstre -> Bool
 moveMonster_post mo@(Monster m (C.C x y) index cpt a) | ((mod x 5) == 0) && ((mod y 5) == 0) = True
                                                       | otherwise = False
 
+
+
 -- Modifie les coordonnées d'une liste des monstres
 moveAllMonster :: [Monstre] -> [Monstre]
 moveAllMonster [] = []
 moveAllMonster (x:xs) = (moveMonster x):(moveAllMonster xs)
+
+
 
 
 elimineMonstres :: Int -> Int -> [Monstre] -> [Monstre]
@@ -94,16 +98,25 @@ elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==y 
                                                             | otherwise = ((Monster m (C.C x y) index cpt a):(elimineMonstres px py xs))
 elimineMonstres px py [] = []
 
+
+
 elimineMonstres_pre :: Int -> Int -> Bool
 elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
                           | otherwise = False
  
-collisionMonstres_pre :: Int -> Int -> Bool
-collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 5) == 0) && ((mod py 5) == 0) = True
-                          | otherwise = False
+
+
+
+
+
 -- Verifie si un des monstres est en collision selon les coordonnées x et y donnée
 collisionMonstres :: Int -> Int -> [Monstre] -> Bool
 collisionMonstres px py ((Monster m (C.C x y) index cpt a):[])| px == x && py ==y && a= True
                                                            | otherwise = False
 collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==y && a = True
                                                            | otherwise = (collisionMonstres px py xs)
+
+ 
+collisionMonstres_pre :: Int -> Int -> Bool
+collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
+                            | otherwise = False

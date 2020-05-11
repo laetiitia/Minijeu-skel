@@ -5,7 +5,7 @@ import Carte (Coord)
 import Carte (Case)
 import qualified Carte as C
 
-
+-- Structures :
 data Type =
     Epee
     | Clef
@@ -15,10 +15,18 @@ data Type =
 
 data Item = Item {id :: Type, affichage :: Bool}
 
-prop_inv_Item :: Item -> Bool
-prop_inv_Item (Item ErrorItem aff) = False
-prop_inv_Item (Item id  aff ) = True
 
+-- Verifie si le type de l'item est correcte
+prop_inv_ItemType :: Item -> Bool
+prop_inv_ItemType (Item ErrorItem _) = False
+prop_inv_ItemType (Item id _) = True
+
+
+
+
+-- Fonctions : 
+
+-- Recupere le string par rapport au type de l'item
 typeToString :: Type -> String
 typeToString id = case id of
     Epee -> "epee"
@@ -37,15 +45,16 @@ initItems ((id,(x,y)):xs)  | id == "clef" = M.insert (C.C x y) (Item Clef True) 
                            | id == "tresor" = M.insert (C.C x y) (Item Tresor True) (initItems xs)                   
                            | otherwise = initItems xs
 
-                           
+
+
 prop_pre_initItems :: [(String,(Int,Int))] -> Bool
-prop_pre_initItems ((id,(x,y)):[]) | id == "clef" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
-                             | id == "epee" && ((mod x 5) == 0) && ((mod y 5) == 0)  = True
-                             | id == "tresor" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+prop_pre_initItems ((id,(x,y)):[]) | id == "clef" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
+                             | id == "epee" && ((mod x 50) == 0) && ((mod y 50) == 0)  = True
+                             | id == "tresor" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
                              | otherwise = False
-prop_pre_initItems ((id,(x,y)):xs) | id == "clef" && ((mod x 5) == 0) && ((mod y 5) == 0) = prop_pre_initItems xs
-                             | id == "epee" && ((mod x 5) == 0) && ((mod y 5) == 0)  = prop_pre_initItems xs
-                             | id == "tresor" && ((mod x 5) == 0) && ((mod y 5) == 0) = prop_pre_initItems xs
+prop_pre_initItems ((id,(x,y)):xs) | id == "clef" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
+                             | id == "epee" && ((mod x 50) == 0) && ((mod y 50) == 0)  = prop_pre_initItems xs
+                             | id == "tresor" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
                              | otherwise = False
 
 
@@ -67,6 +76,7 @@ isKey x y b map = False
 changeItems :: Coord -> Type -> M.Map Coord Item -> M.Map Coord Item
 changeItems c t map = M.insert c (Item t False) map
 
+
 prop_pre_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
-prop_pre_changeItems (C.C x y) t map | y>=0 && x>=0 && ((mod x 5) == 0) && ((mod y 5) == 0) && ((isKey x y False map)||(isSword x y False map)) = True
+prop_pre_changeItems (C.C x y) t map = (y>=0 && x>=0 && ((mod x 50) == 0) && ((mod y 50) == 0) && ((isKey x y False map)||(isSword x y False map))) 
 prop_pre_changeItems c t map = False

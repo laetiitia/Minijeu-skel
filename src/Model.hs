@@ -45,22 +45,22 @@ initGameState (C.Carte larg haut contenu) = GameState 350 250 False False 50 (Ms
 -----------------------------
 -- Deplace le perso vers la gauche
 moveLeft :: GameState -> GameState
-moveLeft gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | px > 0 && (C.caseAccesible (px - sp) py contenue) = gs { persoX = px - sp }
+moveLeft gs@(GameState px py _ _ sp _ _ _ carte) | px > 0 && (C.caseAccesible (px - sp) py carte) = gs { persoX = px - sp }
                                 | otherwise = gs
 
 -- Deplace le perso vers la droite
 moveRight :: GameState -> GameState
-moveRight gs@(GameState px py _  _ sp _ _ _ (C.Carte l h contenue)) | px < l && (C.caseAccesible (px + sp) py contenue)= gs { persoX = px + sp }
+moveRight gs@(GameState px py _  _ sp _ _ _ (C.Carte l h map)) | px < l && (C.caseAccesible (px + sp) py (C.Carte l h map))= gs { persoX = px + sp }
                                  | otherwise = gs
 
 -- Deplace le perso vers le haut                           
 moveUp :: GameState -> GameState
-moveUp gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | py > 0 && (C.caseAccesible px (py - sp) contenue)= gs { persoY = py - sp }
+moveUp gs@(GameState px py _ _ sp _ _ _ carte) | py > 0 && (C.caseAccesible px (py - sp) carte)= gs { persoY = py - sp }
                               | otherwise = gs
 
 -- Deplace le perso vers le bas
 moveDown :: GameState -> GameState
-moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h contenue)) | py < h && (C.caseAccesible px (py + sp) contenue) = gs { persoY = py + sp }
+moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h map)) | py < h && (C.caseAccesible px (py + sp) (C.Carte l h map)) = gs { persoY = py + sp }
                                 | otherwise = gs
 
 
@@ -97,7 +97,7 @@ changeMonstres gs@(GameState px py False _ _ monstres _ ini _) | Mst.collisionMo
 
 -- Permet d'ouvrir une porte si le perso a une clef
 activePorte :: GameState -> GameState
-activePorte gs@(GameState px py _ True sp _ _ _ (C.Carte l h contenue)) =let (map,b)=(C.changePorte px py 0 contenue) in if b then gs{carte = (C.Carte l h map), clef = False} else gs{carte = (C.Carte l h map)}
+activePorte gs@(GameState px py _ True sp _ _ _ carte) =let (carte2, b)=(C.openDoor px py carte) in if b then gs{carte = carte2, clef = False} else gs
 activePorte gs = gs
 
 --------------------------------

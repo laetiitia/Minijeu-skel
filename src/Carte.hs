@@ -10,19 +10,19 @@ import Data.Maybe
 ---------------------------------
 
 data Case = Vide -- une case vide (et porte ouverte)
-  | Perso       --Id Personnage
-  | AngleT     --Angle T Mur 
-  | Horizontal  --Mur Horizontal
-  | Vertical   --Mur Vertical  infranchissable (sauf pour les fantomes ...)
-  | PorteNS    --Porte Nord Sud (forcement fermé car ouvert = vide )
-  | PorteEO   --Porte Est Ouest (forcement fermé car ouvert = vide )
+  | Perso        --Id Personnage
+  | AngleT       --Angle T Mur 
+  | Horizontal   --Mur Horizontal
+  | Vertical     --Mur Vertical  infranchissable (sauf pour les fantomes ...)
+  | PorteNS      --Porte Nord Sud (forcement fermé car ouvert = vide )
+  | PorteEO      --Porte Est Ouest (forcement fermé car ouvert = vide )
   deriving Eq
 
 
 instance Show Case where
   show c = caseToName c
 
-
+-- Associe un caractere à un element de type Case
 associate :: Char -> Case
 associate x = case x of
   'T' -> AngleT
@@ -34,15 +34,16 @@ associate x = case x of
   'c' -> PorteEO
   otherwise -> Vide
 
+-- Retourne le nom de la Case 
 caseToName :: Case -> String
 caseToName x = case x of
-  AngleT -> "angleT"        --Angle T Mur 
+  AngleT -> "angleT"          --Angle T Mur 
   Horizontal -> "Horizontal"  --Mur Horizontal
-  Vertical -> "Vertical"    --Mur Vertical 
+  Vertical -> "Vertical"      --Mur Vertical 
   Vide -> "sol"
   Perso -> "perso"
-  PorteEO -> "PorteEO"    --Porte Est Ouest 
-  PorteNS -> "PorteNS"      --Porte Nord Sud 
+  PorteEO -> "PorteEO"        --Porte Est Ouest 
+  PorteNS -> "PorteNS"        --Porte Nord Sud 
 
 -- Verifie que la case soit un mur
 isWall :: Case -> Bool
@@ -51,6 +52,8 @@ isWall c = (c == AngleT) || (c == Horizontal) || (c == Vertical)
 -- Verifie que c'est une porte
 isDoor :: Case -> Bool
 isDoor c = (c == PorteEO) || (c == PorteNS) 
+
+
 
 ---------------------------------
 ------------ COORD --------------
@@ -66,8 +69,10 @@ instance Show Coord where
   show (C cx cy) = "{ cx: "++(show cx)++" , cy: "++(show cy)++" }"
 
 -- Verifie que les coordonnées soit positif et qu'ils soient conforme à la hauteur et largeur
-propCoord :: Coord -> Int -> Int -> Bool
-propCoord (C cx cy) h l = 0 <= cx && cx <= l && 0 <= cy && cy <= h 
+-- de plus chaque coordonnée est multiple de 50
+prop_Coord :: Coord -> Int -> Int -> Bool
+prop_Coord (C cx cy) l h = 0 <= cx && cx <= l && 0 <= cy && cy <= h && ((mod cx 50) == 0) && ((mod cy 50) == 0)
+
 
 
 ---------------------------------
@@ -83,28 +88,29 @@ data Carte = Carte { cartel :: Int , -- largeur
 
 -- *** INVARIANTS SUR LES CARTES *** --
 
-propCarte ::  Carte -> Bool
-propCarte carte = (propTailleCarte carte) && (propCaseCarte carte) && (propCasePorte carte)
+-- Verifie toute les propriétés de la carte
+prop_inv_Carte ::  Carte -> Bool
+prop_inv_Carte carte = (prop_TailleCarte carte) && (prop_CaseCarte carte) && (prop_CasePorte carte)
 
 -- Verifie que:
 -- la hauteur et largeur de la carte par rapport aux nombres de cases
 -- et ainsi leur existance
-propTailleCarte :: Carte -> Bool
-propTailleCarte (Carte larg haut contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
+prop_TailleCarte :: Carte -> Bool
+prop_TailleCarte (Carte larg haut contenue) = ((M.size contenue) == ((haut `div` 50) * (larg `div` 50)))
 
 -- Verifie que:
 -- chaque case possede des coordonnées correctes
 -- que la carte soit bien entouré de mur
-propCaseCarte :: Carte -> Bool
-propCaseCarte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
-  where checkCase (C cx cy) val acc = (let inv1 = (propCoord (C cx cy) haut larg) in if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) 
+prop_CaseCarte :: Carte -> Bool
+prop_CaseCarte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
+  where checkCase (C cx cy) val acc = (let inv1 = (prop_Coord (C cx cy) larg haut) in if (cx == 0 || cx == (larg - 50) || cy == 0 || cy == (haut - 50)) 
                                                                                       then ((isWall val) && inv1):acc 
                                                                                       else inv1:acc )
 
 -- Verifie que:
 -- chaque porte est bien maintenu par des murs
-propCasePorte :: Carte -> Bool
-propCasePorte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
+prop_CasePorte :: Carte -> Bool
+prop_CasePorte (Carte larg haut contenu) = let list = M.foldrWithKey checkCase [] contenu in listAnd list
   where checkCase (C cx cy) val acc = (if (isDoor val)
                                         then (if (val == PorteNS)
                                           then (checkWall (C (cx-50) cy) contenu):(checkWall (C (cx+50) cy) contenu):acc
@@ -137,29 +143,74 @@ initMapFromFile (head:tail) (C x y) acc = if head == '\n'
                                    else initMapFromFile tail (C (x+50) y) (M.insert (C x y) (associate head) acc)
 
 
+
 -- Recupere du string represantant la carte, le nombre de case maximum dans une ligne et dans une colonne.
 getFormat :: String -> (Int, Int)
 getFormat str = let list = lines str in (maximum (map (\x -> length x) list), length list) 
-
 
 -- Permet d'initialiser une carte grace au string reprensantant la date
 readCarte :: String -> Carte
 readCarte txt = let (x, y) = (getFormat txt) in Carte (x*50) (y*50) (initMapFromFile txt (C 0 0) M.empty)
 
+-- Précondition de readCarte: le String ne doit pas etre vide
+prop_pre_readCarte :: String -> Bool
+prop_pre_readCarte s = not (null s)
 
--- Test si la case est accesible (ie soit vide soit la porte est ouverte)
-caseAccesible :: Int -> Int -> M.Map Coord Case -> Bool
-caseAccesible x y map = case M.lookup (C x y) map of
+-- Postcondition de readCarte: cela retourne une carte correcte
+prop_post_readCarte :: String -> Bool
+prop_post_readCarte str = prop_inv_Carte (readCarte str)
+
+
+
+
+-- Test si la case est accesible (ie la case est vide)
+caseAccesible :: Int -> Int -> Carte -> Bool
+caseAccesible x y (Carte _ _ map) = case M.lookup (C x y) map of
     Just Vide -> True
     otherwise -> False
 
+
+
+-- Cherche une porte autour des coordonnées données s'il y en a une.
+-- L'unique appel a cette méthode ce fait au niveau de openDoor, or 
+-- la pré-condition de openDoor vérifie que les coordonnées soit correct
+-- et que la map ne soit pas null.
+findDoor :: Int -> Int -> Int -> M.Map Coord Case -> Maybe Coord
+findDoor x y cpt map =  case cpt of
+  0 -> let res = (M.lookup (C (x+50) y) map) in if (isDoor (fromJust res)) then (Just (C (x+50) y)) else findDoor x y (cpt+1) map
+  1 -> let res = (M.lookup (C (x-50) y) map) in if (isDoor (fromJust res)) then (Just (C (x-50) y)) else findDoor x y (cpt+1) map
+  2 -> let res = (M.lookup (C x (y+50)) map) in if (isDoor (fromJust res)) then (Just (C x (y+50))) else findDoor x y (cpt+1) map
+  3 -> let res = (M.lookup (C x (y-50)) map) in if (isDoor (fromJust res)) then (Just (C x (y-50))) else Nothing
+  otherwise -> Nothing
+
+
+-- Ouvre la porte fermé autour des coordonnées données s'il y en a une (lors de l'ouverture la case devient vide)
+openDoor :: Int -> Int -> Carte -> (Carte, Bool)
+openDoor x y (Carte l h map) = let res = findDoor x y 0 map in if (isJust res) 
+                                                                then ((Carte l h (M.insert (fromJust res) Vide map)), True)
+                                                                else ((Carte l h map), False)
+
+
+-- Précondition de changePorte: que la carte soit correct ainsi que la coordonnée donnée (et vérification d'invariant de carte)
+prop_pre_openDoor :: Int -> Int -> Carte -> Bool
+prop_pre_openDoor x y (Carte l h map) = (prop_Coord (C x y) l h) && (not (M.null map)) && (prop_inv_Carte (Carte l h map))
+
+-- PostCondition de changePorte: la carte est toujours correct et le booléan est à true (et vérification d'invariant de carte)
+prop_post_openDoor :: Int -> Int -> Carte -> Bool
+prop_post_openDoor x y (Carte l h map) = let ((Carte l2 h2 map2), b) = openDoor x y (Carte l h map) in b && (prop_inv_Carte (Carte l2 h2 map2)) && (isOpen map2)
+  where isOpen m = let res = (findDoor x y 0 map) in (if (isJust res) 
+                                                      then let c = (M.lookup (fromJust res) m) in if (isJust c) then (Vide == (fromJust c)) else False
+                                                      else False)
+
+
+{-
 -- Cherche la porte autours des coordonnées pour l'ouvrir
 changePorte :: Int -> Int -> Int -> M.Map Coord Case -> (M.Map Coord Case,Bool)
 changePorte x y cpt map = case cpt of
-  0 ->let res = (openDoor (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  1 ->let res = (openDoor (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  2 ->let res = (openDoor (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  3 ->let res = (openDoor (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
+  0 -> let res = (openDoor (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  1 -> let res = (openDoor (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  2 -> let res = (openDoor (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
+  3 -> let res = (openDoor (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
 
 
 -- Ouvre la porte fermé ( ouverture = Case Vide)
@@ -168,6 +219,6 @@ openDoor c = case c of
   Just PorteEO -> Just Vide
   Just PorteNS -> Just Vide
   x -> Nothing
-
+-}
 
 

@@ -27,7 +27,7 @@ prop_initMonstres_inv = forAll genMonstresOk $ Mon.propMonstreValide
 
 
 initSpeck = do
-    describe "verifie ques les entré sont valide" $ do
+    describe "Verifie l'initialisation des monstres" $ do
         it "liste Monstre valide" $
             property prop_initMonstres_inv 
 
