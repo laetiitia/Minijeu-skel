@@ -15,13 +15,15 @@ data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: I
 
 ----- MONSTER FUNCTIONS -----
 
+-- Retourne le string liée au type du monstre
 especeToString :: Espece -> String
 especeToString e = case e of
     Orc -> "Orc"
     Skeleton -> "Skeleton"
     Fantome -> "Fantome"
 
--- Permet de recuperer selon l'espece le nombre deplacement par mouvement
+-- Permet de recuperer selon l'espece le nombre de deplacement
+-- par défaut pour un mouvement (direction)
 getCptInit :: Espece -> Int
 getCptInit e = case e of
     Orc -> 3
@@ -47,8 +49,8 @@ moveToDir str (C.C x y) =
         "Gauche" -> (C.C (x - 50) y)
         "Bas" -> (C.C x (y + 50))
 
-propMoveToDir ::String -> Bool
-propMoveToDir str =
+prop_MoveToDir ::String -> Bool
+prop_MoveToDir str =
     case str of 
         "Haut" -> True
         "Droite" -> True
@@ -65,8 +67,8 @@ initMonstres (((x,y),str):xs) | str == "Orc" = (Monster Orc (C.C x y) 0 (getCptI
                               | str == "Skeleton" = (Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True) : (initMonstres xs)
                               | str == "Fantome" = (Monster Fantome (C.C x y) 0 (getCptInit Fantome) True) : (initMonstres xs)
 
-propMonstreValide :: ((Int,Int),String) -> Bool
-propMonstreValide ((x,y),id) | id == "Orc" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
+prop_MonstreValide :: ((Int,Int),String) -> Bool
+prop_MonstreValide ((x,y),id) | id == "Orc" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
                              | id == "Skeleton" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
                              | id == "Fantome" && ((mod x 5) == 0) && ((mod y 5) == 0) = True
                              | otherwise = False
@@ -120,3 +122,27 @@ collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==
 collisionMonstres_pre :: Int -> Int -> Bool
 collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
                             | otherwise = False
+
+
+
+
+
+
+--- ** Generate Monster ** ---
+chooseMonsters :: Int -> String
+chooseMonsters i =
+    case i of
+        1 -> "Orc"
+        2 -> "Fantome"
+        3 -> "Skeleton"
+        x -> "error"
+
+genMonstresOk :: Gen ((Int,Int),String)
+genMonstresOk = do
+    x <- choose(0,20)
+    y <- choose(0,20)
+    i <- choose(1,3)
+    return $ (((x*50),(y*50)),chooseMonsters i)
+
+prop_initMonstres_inv :: Property
+prop_initMonstres_inv = forAll genMonstresOk $ prop_MonstreValide
