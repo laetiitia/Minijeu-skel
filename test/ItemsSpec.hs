@@ -60,10 +60,10 @@ changeItemsSpec = do
             I.prop_pre_exist_changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
             `shouldBe` True
         it "post condition Type incorrecte" $ do
-            I.prop_post_changeItems (C.C 50 50) I.Clef (I.changeItems (C.C 50 50) I.ErrorItem (M.fromList [((C.C 50 50),(I.Item I.Clef False))]))
+            I.prop_post_changeItems (C.C 50 50) I.ErrorItem (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
             `shouldBe` False
         it "post condition Type correcte" $ do
-            I.prop_post_changeItems (C.C 50 50) I.Clef (I.changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))]))
+            I.prop_post_changeItems (C.C 50 50) I.Clef (M.fromList [((C.C 50 50),(I.Item I.Clef False))])
             `shouldBe` True
 
 initItemsSpec = do

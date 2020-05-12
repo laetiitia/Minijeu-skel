@@ -16,6 +16,7 @@ data Type =
 
 data Item = Item {id :: Type, affichage :: Bool}
 
+---- INVARIANT ITEM ----
 
 -- Verifie si le type de l'item est correcte
 prop_inv_ItemType :: Item -> Bool
@@ -51,6 +52,7 @@ stringIsType str = case str of
     "tresor" -> True
     otherwise -> False
 
+
 -- Initialise les Items (sauf ErrorItem)
 initItems :: [(String,(Int,Int))] -> M.Map Coord Item
 initItems []  = M.empty
@@ -68,12 +70,14 @@ prop_post_initItems :: M.Map Coord Item -> Bool
 prop_post_initItems m = M.foldr (\x y -> (prop_inv_ItemType x) &&  y) True m
 
 
+
 -- Verifie si c'est une épée ou non 
-isSword :: Int -> Int ->Bool -> M.Map Coord Item -> Bool
+isSword :: Int -> Int -> Bool -> M.Map Coord Item -> Bool
 isSword x y False map = case M.lookup (C.C x y) map of
     Just (Item Epee True) -> True
     otherwise -> False
 isSword x y b map = False
+
 
 -- Verifie si c'est une clé ou non
 isKey :: Int -> Int -> Bool -> M.Map Coord Item -> Bool
@@ -81,6 +85,8 @@ isKey x y False map = case M.lookup (C.C x y) map of
     Just (Item Clef True) -> True
     otherwise -> False
 isKey x y b map = False
+
+
 
 -- Desactive l'affichage de l'item (passer à False)
 changeItems :: Coord -> Type -> M.Map Coord Item -> M.Map Coord Item
@@ -99,8 +105,9 @@ prop_pre_exist_changeItems (C.C x y) t map = case M.lookup (C.C x y) map of
     Just (Item tp _) -> tp == t 
     otherwise -> False
 
-
+-- PostCondition changeItems: Verifie si l'item est correct et que sont affichage a bien changer
 prop_post_changeItems ::Coord -> Type -> M.Map Coord Item -> Bool
-prop_post_changeItems (C.C x y) t map = case M.lookup (C.C x y) map of
-     Just i -> prop_inv_ItemType i
-     otherwise -> False
+prop_post_changeItems c t m = let map = changeItems c t m in
+    case M.lookup c map of
+        Just (Item id aff) -> prop_inv_ItemType (Item id aff) && (not aff)
+        otherwise -> False
