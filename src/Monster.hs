@@ -81,7 +81,7 @@ getMonsterPattern esp =
 
 -- Verifie que la liste des directions soit correcte 
 prop_post_getMonsterPattern :: Espece -> Bool
-prop_post_getMonsterPattern e = let res = getMonsterPattern e in C.listAnd (fmap prop_pre_MoveToDir res)
+prop_post_getMonsterPattern e = C.listAnd (fmap prop_pre_MoveToDir (getMonsterPattern e))
 
 
 
@@ -125,7 +125,7 @@ prop_pre_initMonstres (((x,y),id):xs)   | (stringIsEspece id) && ((mod x 50) == 
 -- Verifie que tout les monstres en sorties soient correctes 
 prop_post_initMonstres :: [((Int,Int),String)] -> Bool
 prop_post_initMonstres [] = True
-prop_post_initMonstres list = let res = initMonstres list in C.listAnd (fmap prop_inv_Monstre res)
+prop_post_initMonstres list = C.listAnd (fmap prop_inv_Monstre (initMonstres list))
 
 
 
@@ -141,7 +141,7 @@ prop_pre_moveMonster :: Monstre -> Bool
 prop_pre_moveMonster monstre = prop_inv_Monstre monstre
 
 -- Postcondition moveMonstre: le monstre doit vérifié l'invariant en sortie de fonction
-prop_post_moveMonster monstre = let res = moveMonster monstre in prop_inv_Monstre res
+prop_post_moveMonster monstre = prop_inv_Monstre (moveMonster monstre)
 
 
 

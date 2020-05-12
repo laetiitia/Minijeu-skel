@@ -203,22 +203,5 @@ prop_post_openDoor x y (Carte l h map) = let ((Carte l2 h2 map2), b) = openDoor 
                                                       else False)
 
 
-{-
--- Cherche la porte autours des coordonnées pour l'ouvrir
-changePorte :: Int -> Int -> Int -> M.Map Coord Case -> (M.Map Coord Case,Bool)
-changePorte x y cpt map = case cpt of
-  0 -> let res = (openDoor (M.lookup (C (x+50) y) map)) in if (isJust res) then ((M.insert (C (x+50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  1 -> let res = (openDoor (M.lookup (C (x-50) y) map)) in if (isJust res) then ((M.insert (C (x-50) y) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  2 -> let res = (openDoor (M.lookup (C x (y+50)) map)) in if (isJust res) then ((M.insert (C x (y+50)) (fromJust res) map) ,True ) else changePorte x y (cpt+1) map 
-  3 -> let res = (openDoor (M.lookup (C x (y-50)) map)) in if (isJust res) then ((M.insert (C x (y-50)) (fromJust res) map) ,True ) else (map,False) 
-
-
--- Ouvre la porte fermé ( ouverture = Case Vide)
-openDoor :: Maybe Case -> Maybe Case
-openDoor c = case c of 
-  Just PorteEO -> Just Vide
-  Just PorteNS -> Just Vide
-  x -> Nothing
--}
 
 
