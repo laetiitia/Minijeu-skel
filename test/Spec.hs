@@ -10,3 +10,4 @@ main = hspec $ do
     CS.cFunSpec
     IS.cFunSpec
     MONS.cFunSpec
+    MODS.cFunSpec

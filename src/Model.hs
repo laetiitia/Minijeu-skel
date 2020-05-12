@@ -102,7 +102,7 @@ moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h map)) | py < h && (C.case
 
 -- PreCondition move_ : Les coordonnées du personnage doit etre comprise dans la carte et la vitesse est un entier positif
 prop_pre_move :: GameState -> Bool
-prop_pre_move gs@(GameState px py _ sp _ _ _ _ carte) = (prop_inv_Perso px py carte ) && sp <= 0 --prop_inv_GameState gs
+prop_pre_move gs = prop_inv_GameState gs
 
 -- PostCondition move_ : verifie que le gamestate soit valide selon l'action du move
 prop_post_move :: GameState -> String -> Bool
