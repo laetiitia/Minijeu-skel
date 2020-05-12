@@ -153,17 +153,36 @@ prop_post_changeItems gs = prop_inv_GameState (changeItems gs)
 
 
 
-
+-- S'il y a une collision avec un des monstres alors celui-ci sera éliminé si le personnage a une épée
 changeMonstres :: GameState -> GameState
 changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.collisionMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
                                                             | otherwise = gs
 changeMonstres gs@(GameState px py False _ _ monstres _ ini _) | Mst.collisionMonstres px py monstres =  initGameState ini
                                                                |otherwise = gs
 
--- Permet d'ouvrir une porte si le perso a une clef
+-- PreCondition changeItems : le gamestate doit etre valide
+prop_pre_changeMonstres :: GameState -> Bool
+prop_pre_changeMonstres = prop_inv_GameState gs
+
+-- PostCondition changeItems : le gamestate doit etre valide
+prop_post_changeMonstres :: GameState -> Bool
+prop_post_changeMonstres = prop_inv_GameState (changeMonstres gs)
+
+
+
+-- Permet d'ouvrir une porte si le personnage a une clef
 activePorte :: GameState -> GameState
 activePorte gs@(GameState px py _ True sp _ _ _ carte) =let (carte2, b)=(C.openDoor px py carte) in if b then gs{carte = carte2, clef = False} else gs
 activePorte gs = gs
+
+-- PreCondition activePorte : le gamestate doit etre valide
+prop_pre_activePorte :: GameState -> Bool
+prop_pre_activePorte = prop_inv_GameState gs
+
+-- PostCondition changeItems : le gamestate doit etre valide
+prop_post_activePorte :: GameState -> Bool
+prop_post_activePorte = prop_inv_GameState (activePorte gs)
+
 
 
 --------------------------------
