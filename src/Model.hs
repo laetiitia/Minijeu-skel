@@ -162,11 +162,11 @@ changeMonstres gs@(GameState px py False _ _ monstres _ ini _) | Mst.collisionMo
 
 -- PreCondition changeItems : le gamestate doit etre valide
 prop_pre_changeMonstres :: GameState -> Bool
-prop_pre_changeMonstres = prop_inv_GameState gs
+prop_pre_changeMonstres gs = prop_inv_GameState gs
 
 -- PostCondition changeItems : le gamestate doit etre valide
 prop_post_changeMonstres :: GameState -> Bool
-prop_post_changeMonstres = prop_inv_GameState (changeMonstres gs)
+prop_post_changeMonstres gs = prop_inv_GameState (changeMonstres gs)
 
 
 
@@ -177,11 +177,11 @@ activePorte gs = gs
 
 -- PreCondition activePorte : le gamestate doit etre valide
 prop_pre_activePorte :: GameState -> Bool
-prop_pre_activePorte = prop_inv_GameState gs
+prop_pre_activePorte gs = prop_inv_GameState gs
 
 -- PostCondition changeItems : le gamestate doit etre valide
 prop_post_activePorte :: GameState -> Bool
-prop_post_activePorte = prop_inv_GameState (activePorte gs)
+prop_post_activePorte gs = prop_inv_GameState (activePorte gs)
 
 
 

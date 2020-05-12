@@ -19,8 +19,19 @@ initSpec = do
             GS.prop_pre_InitGameState (C.readCarte "T===T\n|c |\n=====")
             `shouldBe` False
 
+moveSpec = do
+    describe "Verifie le deplacement du personnage" $ do
+        it "PreCondition valide" $ do
+            GS.prop_pre_move (GS.initGameState (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
+        it "PreCondition non valide" $ do
+            GS.prop_pre_move (GS.initGameState (C.readCarte "T===T\n|  |\n====="))
+            `shouldBe` False
+        
+
 
 
 
 cFunSpec = do 
     initSpec
+    moveSpec
