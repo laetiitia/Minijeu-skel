@@ -25,11 +25,11 @@ prop_inv_coord_monstre (Monster _ (C.C x y) _ _ _) = y>=0 && x>=0 && ((mod x 50)
 
 -- Verifie que l'index de direction soit bien compris dans la longueur du tableau de son pattern
 prop_inv_direction_monstre :: Monstre -> Bool
-prop_inv_direction_monstre (Monster m _ direction _ _) = direction < (length (getMonsterPattern m))
+prop_inv_direction_monstre (Monster m _ direction _ _) = (direction < (length (getMonsterPattern m))) && (0 <= direction)
 
 -- Verifie que le nombre de mouvement pour une direction soit bien correcte
 prop_inv_cpt_monstre :: Monstre -> Bool
-prop_inv_cpt_monstre (Monster m _ _ cpt _) = cpt>=0 && cpt <= (getCptInit m)
+prop_inv_cpt_monstre (Monster m _ _ cpt _) = (0 <= cpt) && (cpt <= (getCptInit m))
 
 
 
@@ -124,6 +124,7 @@ prop_pre_initMonstres (((x,y),id):xs)   | (stringIsEspece id) && ((mod x 50) == 
 
 -- Verifie que tout les monstres en sorties soient correctes 
 prop_post_initMonstres :: [((Int,Int),String)] -> Bool
+prop_post_initMonstres [] = True
 prop_post_initMonstres list = let res = initMonstres list in C.listAnd (fmap prop_inv_Monstre res)
 
 
@@ -131,8 +132,8 @@ prop_post_initMonstres list = let res = initMonstres list in C.listAnd (fmap pro
 
 -- Modifie les coordonnées du monstre selon son pattern
 moveMonster :: Monstre -> Monstre
-moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
-                                                | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
+moveMonster mo@(Monster m (C.C x y) index cpt a) |( cpt == 0 && a) = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
+                                                | (cpt > 0 && a) = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
                                                 | otherwise = mo
 
 -- Précondition moveMonstre: le monstre doit vérifié l'invariant 
@@ -156,15 +157,18 @@ prop_pre_elimineMonstres :: Int -> Int -> [Monstre] -> Bool
 prop_pre_elimineMonstres px py ms = py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) && (C.listAnd (fmap prop_inv_Monstre ms) )
  
 -- PostCondition elimineMonstres : verifie que les monstres en sortie de fonction soit dans les normes
+-- et que l'affichage des monstres eliminés soit bien à False
 prop_post_elimineMonstres :: Int -> Int -> [Monstre] -> Bool
-prop_post_elimineMonstres px py ms = let res = elimineMonstres px py ms in (C.listAnd (fmap prop_inv_Monstre res))
+prop_post_elimineMonstres px py ms = let res = elimineMonstres px py ms in (C.listAnd (fmap prop_inv_Monstre res)) && (checkAff res)
+    where checkAff list | (length list == 0) = True
+                        | otherwise = let (Monster m (C.C x y) index cpt a) = (head list) in if (x==px && y==py) then ((not a) && checkAff (tail list)) else checkAff (tail list)
 
 
 
 
 -- Verifie si un des monstres est en collision selon les coordonnées x et y donnée
 collisionMonstres :: Int -> Int -> [Monstre] -> Bool
-collision _ _ [] = False
+collisionMonstres _ _ [] = False
 collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)  | (px == x && py ==y && a ) = True --collision detecté
                                                                 | otherwise = (collisionMonstres px py xs) --verifie les autres
 

@@ -9,4 +9,4 @@ main :: IO ()
 main = hspec $ do
     CS.cFunSpec
     IS.cFunSpec
-   -- MONS.cFunSpec
+    MONS.cFunSpec
