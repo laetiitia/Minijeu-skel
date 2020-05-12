@@ -13,19 +13,27 @@ data Espece =
 data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int, affichage :: Bool}
 
 
------ INVARIANT MONSTRE -----
+----- INVARIANTS MONSTRE -----
 
+prop_inv_Monstre :: Monstre -> Bool
+prop_inv_Monstre m = (prop_inv_coord_monstre m) && (prop_inv_cpt_monstre m) && (prop_inv_direction_monstre m)
+
+
+-- Verifie que les coordonnées du monstre soit correcte 
 prop_inv_coord_monstre :: Monstre -> Bool
 prop_inv_coord_monstre (Monster _ (C.C x y) _ _ _) = y>=0 && x>=0 && ((mod x 50) == 0) && ((mod y 50) == 0)
 
+-- Verifie que l'index de direction soit bien compris dans la longueur du tableau de son pattern
 prop_inv_direction_monstre :: Monstre -> Bool
 prop_inv_direction_monstre (Monster m _ direction _ _) = direction < (length (getMonsterPattern m))
 
+-- Verifie que le nombre de mouvement pour une direction soit bien correcte
 prop_inv_cpt_monstre :: Monstre -> Bool
 prop_inv_cpt_monstre (Monster m _ _ cpt _) = cpt>=0 && cpt <= (getCptInit m)
 
 
------ MONSTER FUNCTIONS -----
+
+----- MONSTER FONCTIONS SECONDAIRES -----
 
 -- Retourne le string liée au type du monstre
 especeToString :: Espece -> String
@@ -33,6 +41,25 @@ especeToString e = case e of
     Orc -> "Orc"
     Skeleton -> "Skeleton"
     Fantome -> "Fantome"
+
+-- Retourne l'Espece associé au string
+-- Remarque: verifié le string passé en argument avec la fonction 
+-- stringIsEspece sinon par defaut cela retourne un Orc
+stringToEspece :: String -> Espece
+stringToEspece str = case str of
+    "Orc" -> Orc
+    "Skeleton" -> Skeleton
+    "Fantome" -> Fantome
+    otherwise -> Orc -- Espece retourné par defaut
+
+
+-- Verifie que le string soit bien assimilé à une Espece
+stringIsEspece :: String -> Bool
+stringIsEspece str = case str of
+    "Orc" -> True
+    "Skeleton" -> True
+    "Fantome" -> True
+    otherwise -> False 
 
 -- Permet de recuperer selon l'espece le nombre de deplacement
 -- par défaut pour un mouvement (direction)
@@ -43,6 +70,7 @@ getCptInit e = case e of
     Fantome -> 5
 
 
+
 -- Represente le chemin du monstre (decrit dans une liste de direction)
 getMonsterPattern :: Espece -> [String]
 getMonsterPattern esp =
@@ -50,6 +78,11 @@ getMonsterPattern esp =
         Orc -> ["Haut", "Droite", "Bas", "Gauche"]
         Skeleton -> ["Haut", "Bas"]
         Fantome -> ["Droite", "Bas", "Droite","Haut","Gauche", "Bas", "Gauche","Haut" ]
+
+-- Verifie que la liste des directions soit correcte 
+prop_post_getMonsterPattern :: Espece -> Bool
+prop_post_getMonsterPattern e = let res = getMonsterPattern e in C.listAnd (fmap prop_pre_MoveToDir res)
+
 
 
 -- Modifie la coordonée en fonction de la direction
@@ -60,7 +93,9 @@ moveToDir str (C.C x y) =
         "Droite" -> (C.C (x + 50) y)
         "Gauche" -> (C.C (x - 50) y)
         "Bas" -> (C.C x (y + 50))
+        otherwise -> (C.C x y)
 
+-- Verifie que le string envoyer soit correcte
 prop_pre_MoveToDir ::String -> Bool
 prop_pre_MoveToDir str =
     case str of 
@@ -68,76 +103,74 @@ prop_pre_MoveToDir str =
         "Droite" -> True
         "Gauche" -> True
         "Bas" -> True
-        x -> False
+        otherwise -> False
 
 
+
+
+----- MONSTER FONCTIONS GENERAUX -----
+
+-- Initialise une liste de monstre selon les informations données ( Coordonnées du monstre, Type du Monstre  )
 initMonstres :: [((Int,Int),String)] -> [Monstre]
-initMonstres (((x,y),str):[]) | str == "Orc" = [(Monster Orc (C.C x y) 0 (getCptInit Orc) True)]
-                              | str == "Skeleton" = [(Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True)]
-                              | str == "Fantome" = [(Monster Fantome (C.C x y) 0 (getCptInit Fantome) True)]
-initMonstres (((x,y),str):xs) | str == "Orc" = (Monster Orc (C.C x y) 0 (getCptInit Orc) True): (initMonstres xs)
-                              | str == "Skeleton" = (Monster Skeleton (C.C x y) 0 (getCptInit Skeleton) True) : (initMonstres xs)
-                              | str == "Fantome" = (Monster Fantome (C.C x y) 0 (getCptInit Fantome) True) : (initMonstres xs)
+initMonstres [] = []
+initMonstres (((x,y), id):xs) | (stringIsEspece id) = let e = (stringToEspece id) in (Monster e (C.C x y) 0 (getCptInit e) True): (initMonstres xs)
+                              | otherwise = (initMonstres xs)
 
-prop_pre_MonstreValide :: [((Int,Int),String)] -> Bool
-prop_pre_MonstreValide (((x,y),id):[]) | id == "Orc" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
-                             | id == "Skeleton" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
-                             | id == "Fantome" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
-                             | otherwise = False
-prop_pre_MonstreValide (((x,y),id):xs) | id == "Orc" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
-                             | id == "Skeleton" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
-                             | id == "Fantome" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_MonstreValide xs
-                             | otherwise = False
+-- Verifie que les coordonnées soient des multiples de 50 et que le string corresponde à une Espece  
+prop_pre_initMonstres :: [((Int,Int),String)] -> Bool
+prop_pre_initMonstres [] = True
+prop_pre_initMonstres (((x,y),id):xs)   | (stringIsEspece id) && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initMonstres xs
+                                        | otherwise = False 
+
+-- Verifie que tout les monstres en sorties soient correctes 
+prop_post_initMonstres :: [((Int,Int),String)] -> Bool
+prop_post_initMonstres list = let res = initMonstres list in C.listAnd (fmap prop_inv_Monstre res)
+
+
+
 
 -- Modifie les coordonnées du monstre selon son pattern
 moveMonster :: Monstre -> Monstre
 moveMonster mo@(Monster m (C.C x y) index cpt a) | cpt == 0 && a = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
-                                            | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
-                                            | otherwise = mo
+                                                | cpt > 0 && a = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
+                                                | otherwise = mo
 
-prop_moveMonster :: Monstre -> Bool
-prop_moveMonster mo@(Monster m (C.C x y) index cpt a) | ((mod x 50) == 0) && ((mod y 50) == 0) && x>=0 && y>=0 && cpt>=0 = True
-                                                      | otherwise = False
+-- Précondition moveMonstre: le monstre doit vérifié l'invariant 
+prop_pre_moveMonster :: Monstre -> Bool
+prop_pre_moveMonster monstre = prop_inv_Monstre monstre
 
-
-
--- Modifie les coordonnées d'une liste des monstres
-moveAllMonster :: [Monstre] -> [Monstre]
-moveAllMonster [] = []
-moveAllMonster (x:xs) = (moveMonster x):(moveAllMonster xs)
+-- Postcondition moveMonstre: le monstre doit vérifié l'invariant en sortie de fonction
+prop_post_moveMonster monstre = let res = moveMonster monstre in prop_inv_Monstre res
 
 
 
 
+-- Elimine tout les monstres qui ont pour coordonnées ce passé en argument 
 elimineMonstres :: Int -> Int -> [Monstre] -> [Monstre]
-elimineMonstres px py ((Monster m (C.C x y) index cpt a):[])| px == x && py ==y = [(Monster m (C.C x y) index cpt False)]
-                                                           | otherwise = [(Monster m (C.C x y) index cpt a)]
-elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==y = ((Monster m (C.C x y) index cpt False):(elimineMonstres px py xs))
-                                                            | otherwise = ((Monster m (C.C x y) index cpt a):(elimineMonstres px py xs))
 elimineMonstres px py [] = []
+elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| (px == x && py ==y) = ((Monster m (C.C x y) index cpt False):(elimineMonstres px py xs))
+                                                            | otherwise = ((Monster m (C.C x y) index cpt a):(elimineMonstres px py xs))
 
-
-
-prop_elimineMonstres_pre :: Int -> Int -> Bool
-prop_elimineMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
-                          | otherwise = False
+-- PreCondition elimineMonstres : verifie les coordonnées et que les monstres soient dans les normes 
+prop_pre_elimineMonstres :: Int -> Int -> [Monstre] -> Bool
+prop_pre_elimineMonstres px py ms = py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) && (C.listAnd (fmap prop_inv_Monstre ms) )
  
-
+-- PostCondition elimineMonstres : verifie que les monstres en sortie de fonction soit dans les normes
+prop_post_elimineMonstres :: Int -> Int -> [Monstre] -> Bool
+prop_post_elimineMonstres px py ms = let res = elimineMonstres px py ms in (C.listAnd (fmap prop_inv_Monstre res))
 
 
 
 
 -- Verifie si un des monstres est en collision selon les coordonnées x et y donnée
 collisionMonstres :: Int -> Int -> [Monstre] -> Bool
-collisionMonstres px py ((Monster m (C.C x y) index cpt a):[])| px == x && py ==y && a= True
-                                                           | otherwise = False
-collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)| px == x && py ==y && a = True
-                                                           | otherwise = (collisionMonstres px py xs)
+collision _ _ [] = False
+collisionMonstres px py ((Monster m (C.C x y) index cpt a):xs)  | (px == x && py ==y && a ) = True --collision detecté
+                                                                | otherwise = (collisionMonstres px py xs) --verifie les autres
 
- 
-prop_collisionMonstres_pre :: Int -> Int -> Bool
-prop_collisionMonstres_pre px py | py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) = True
-                            | otherwise = False
+-- PreCondition collisionMonstres : verifie les coordonnées et que les monstres soient dans les normes
+prop_pre_collisionMonstres :: Int -> Int -> [Monstre] -> Bool
+prop_pre_collisionMonstres px py ms =  py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) && (C.listAnd (fmap prop_inv_Monstre ms) )
 
 
 

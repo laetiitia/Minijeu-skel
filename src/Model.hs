@@ -75,7 +75,7 @@ move_post (GameState px py _ _ _ _ _ _ (C.Carte l h _)) | px >= 0 && py>=0 && px
 
 -- Deplace les monstres lorsque le compteurs est à 0
 moveMonsters :: Int -> GameState -> GameState
-moveMonsters 0 gs@(GameState _ _ _ _ _ liste _ _ _) = gs { monstres = Mst.moveAllMonster liste}
+moveMonsters 0 gs@(GameState _ _ _ _ _ liste _ _ _) = gs { monstres = (fmap Mst.moveMonster liste)}
 moveMonsters _ gs = gs
 
 ------------------------------

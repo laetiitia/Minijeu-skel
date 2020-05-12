@@ -25,9 +25,9 @@ prop_inv_ItemType (Item id _) = True
 
 
 
--- Fonctions : 
+---- ITEM FONCTIONS ----
 
--- Recupere le string par rapport au type de l'item
+-- Recupere le string associé au Type de l'item
 typeToString :: Type -> String
 typeToString id = case id of
     Epee -> "epee"
@@ -35,29 +35,35 @@ typeToString id = case id of
     Tresor -> "tresor"
     ErrorItem -> "ErrorItem"
 
--- Initialise les Items
+-- Recupere le Type associé au string
+stringToType :: String -> Type
+stringToType str = case str of
+    "epee" -> Epee
+    "clef" -> Clef
+    "tresor" -> Tresor
+    otherwise -> ErrorItem
+
+-- Verifie que le string soit bien assimilé à un type (sauf ErrorItem)
+stringIsType :: String -> Bool
+stringIsType str = case str of
+    "epee" -> True
+    "clef" -> True
+    "tresor" -> True
+    otherwise -> False
+
+-- Initialise les Items (sauf ErrorItem)
 initItems :: [(String,(Int,Int))] -> M.Map Coord Item
-initItems ((id,(x,y)):[])  | id == "clef" = M.singleton (C.C x y) (Item Clef True)
-                           | id == "epee" = M.singleton (C.C x y) (Item Epee True)
-                           | id == "tresor" = M.singleton (C.C x y) (Item Tresor True)
-                           | otherwise = M.empty
-initItems ((id,(x,y)):xs)  | id == "clef" = M.insert (C.C x y) (Item Clef True) (initItems xs)
-                           | id == "epee" = M.insert (C.C x y) (Item Epee True) (initItems xs)        
-                           | id == "tresor" = M.insert (C.C x y) (Item Tresor True) (initItems xs)                   
+initItems []  = M.empty
+initItems ((id,(x,y)):xs)  | (stringIsType id) = M.insert (C.C x y) (Item (stringToType id) True) (initItems xs)              
                            | otherwise = initItems xs
 
-
-
+-- Precondition initItems: les coordonnées soient des multiples de 50 et que le string corresponde à un Type
 prop_pre_initItems :: [(String,(Int,Int))] -> Bool
-prop_pre_initItems ((id,(x,y)):[]) | id == "clef" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
-                             | id == "epee" && ((mod x 50) == 0) && ((mod y 50) == 0)  = True
-                             | id == "tresor" && ((mod x 50) == 0) && ((mod y 50) == 0) = True
-                             | otherwise = False
-prop_pre_initItems ((id,(x,y)):xs) | id == "clef" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
-                             | id == "epee" && ((mod x 50) == 0) && ((mod y 50) == 0)  = prop_pre_initItems xs
-                             | id == "tresor" && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
-                             | otherwise = False
+prop_pre_initItems [] = True 
+prop_pre_initItems ((id,(x,y)):xs)  | (stringIsType id) && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initItems xs
+                                    | otherwise = False
 
+-- Postcondition initItems
 prop_post_initItems :: M.Map Coord Item -> Bool
 prop_post_initItems m = M.foldr (\x y -> (prop_inv_ItemType x) &&  y) True m
 
@@ -76,7 +82,7 @@ isKey x y False map = case M.lookup (C.C x y) map of
     otherwise -> False
 isKey x y b map = False
 
--- Desactive l'affichage de l'item
+-- Desactive l'affichage de l'item (passer à False)
 changeItems :: Coord -> Type -> M.Map Coord Item -> M.Map Coord Item
 changeItems c t map = M.insert c (Item t False) map
 
