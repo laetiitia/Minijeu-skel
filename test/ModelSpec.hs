@@ -32,6 +32,8 @@ initSpec = do
             `shouldBe` False
 
 
+
+
 movePersoSpec = do
     describe "Verifie le deplacement du personnage" $ do
         it "PreCondition valide" $ do
@@ -55,8 +57,12 @@ movePersoSpec = do
 
 
 
+
 moveMonsterSpec = do 
     describe "Verifie le deplacement des monstres" $ do
+        it "PreCondition valide" $ do
+            GS.prop_pre_moveMonsters 0 (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
         it "PreCondition non valide" $ do
             GS.prop_pre_moveMonsters 0 (GS.initGameState (C.readCarte "T===T\n| c |\n====="))
             `shouldBe` False
@@ -68,6 +74,15 @@ itemSpec = do
         it "PreCondition valide" $ do
             GS.prop_pre_changeItems (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
             `shouldBe` True
+        it "PreCondition non valide (item)" $ do
+            GS.prop_pre_changeItems (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(155,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` False
+        it "PostCondition valide" $ do
+            GS.prop_post_changeItems (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
+        it "PostCondition non valide (item)" $ do
+            GS.prop_post_changeItems (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(155,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` False
 
 
 
@@ -76,6 +91,15 @@ monstresSpec = do
         it "PreCondition valide" $ do
             GS.prop_pre_changeMonstres (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
             `shouldBe` True
+        it "PreCondition non valide (monstre)" $ do
+            GS.prop_pre_changeMonstres (GS.GameState 50 50 False False 50 (Mst.initMonstres [((105,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` False
+        it "PostCondition valide" $ do
+            GS.prop_post_changeMonstres (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
+        it "PostCondition non valide (monstre)" $ do
+            GS.prop_post_changeMonstres (GS.GameState 50 50 False False 50 (Mst.initMonstres [((105,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` False
 
 
 
@@ -83,6 +107,15 @@ portesSpec = do
     describe "Verifie le changement d'état des portes" $ do
         it "PreCondition valide" $ do
             GS.prop_pre_activePorte (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
+        it "PreCondition non valide (porte)" $ do
+            GS.prop_pre_activePorte (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| n |\n=====") (C.readCarte "T===T\n| n |\n====="))
+            `shouldBe` False
+        it "PostCondition valide " $ do
+            GS.prop_post_activePorte (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| c |\n=====") (C.readCarte "T===T\n| c |\n====="))
+            `shouldBe` True
+        it "PostCondition non valide (pas de porte trouvé)" $ do
+            GS.prop_post_activePorte (GS.GameState 50 50 False False 50 (Mst.initMonstres [((100,100),"Orc")]) (I.initItems [("epee",(150,150))]) (C.readCarte "T===T\n| | |\n| c |\n| | |\n=====") (C.readCarte "T===T\n| c |\n====="))
             `shouldBe` True
 
 
