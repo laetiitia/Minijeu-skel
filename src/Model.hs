@@ -24,16 +24,18 @@ import qualified Items as I
 import Debug.Trace as T
 
 
-data GameState = GameState { persoX :: Int
-                           , persoY :: Int
-                           , epee :: Bool
-                           , clef :: Bool
-                           , speed :: Int 
-                           , monstres :: [Mst.Monstre] --Liste des monstres du gamestate
-                           , items :: (M.Map Coord Item) --Emplacement des Items
-                           , initCarte :: Carte --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
-                           , carte :: Carte --Carte courante du gamestate
-                           }
+data GameState = 
+    Title {carte :: Carte}
+    |GameState { persoX :: Int
+                , persoY :: Int
+                , epee :: Bool
+                , clef :: Bool
+                , speed :: Int 
+                , monstres :: [Mst.Monstre] --Liste des monstres du gamestate
+                , items :: (M.Map Coord Item) --Emplacement des Items
+                , initCarte :: Carte --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
+                , carte :: Carte --Carte courante du gamestate
+                }
 
 ---- INVARIANTS GAMESTATE ----
 

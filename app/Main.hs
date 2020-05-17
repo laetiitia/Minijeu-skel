@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import Control.Concurrent (threadDelay)
 
 import Data.Set (Set)
@@ -55,12 +55,13 @@ import qualified LoadSprite as LS
 main :: IO ()
 main = do
   initializeAll
-  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 700 500 }
+  window <- createWindow "Minijeu" $ defaultWindow { windowInitialSize = V2 800 500 }
   renderer <- createRenderer window (-1) defaultRenderer
 
   -- chargement des sprites
-  (tmap', smap') <- LS.loadPerso renderer "assets/perso.png" TM.createTextureMap SM.createSpriteMap
-  (tmap2, smap2) <- LS.loadangleT renderer "assets/texture/angleT.png" tmap' smap'
+  (tmap, smap) <- LS.loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
+  (tmap1, smap1) <- LS.loadPerso renderer "assets/perso.png" tmap smap
+  (tmap2, smap2) <- LS.loadangleT renderer "assets/texture/angleT.png" tmap1 smap1
   (tmap3, smap3) <- LS.loadSol renderer "assets/texture/sol.png" tmap2 smap2
   (tmap4, smap4) <- LS.loadHorizontal renderer "assets/texture/Horizontal.png" tmap3 smap3
   (tmap5, smap5) <- LS.loadVertical renderer "assets/texture/Vertical.png" tmap4 smap4
@@ -83,7 +84,9 @@ main = do
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap14 smap14 kbd (M.initGameState carte) 0
+  gameLoop 10 renderer tmap14 smap14 kbd (M.Title carte) 0
+  SDL.destroyWindow window
+  SDL.quit
 
 
 -------------------------------------------
@@ -138,15 +141,49 @@ refresh events kbd = K.handleEvent (head events) kbd
 ------------------------------------------
 ---------------- GAMELOOP------------------
 -------------------------------------------
-
-gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState ->Int -> IO ()
-gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o _ carte) cpt= do
+{-}
+titleScene :: Renderer -> TextureMap -> SpriteMap -> Keyboard -> Carte.Carte -> Int -> IO ()
+titleScene renderer tmap smap kbd carte i = do
   startTime <- time
   events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
   let kbd' = refresh events kbd
   clear renderer
 
+  let carte2 = case i of 
+                0 -> "T========T\n|        |\n|        |\n|        |\n|        |\n|        |\n|        |\n=========="
+                1 -> "wrong"
+
+  putStrLn $ carte2
+
+  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
+  present renderer
+  when (K.keypressed KeycodeReturn kbd') (gameLoop 10 renderer tmap smap kbd' (M.initGameState carte) 0)
+
+  unless (quit || (K.keypressed KeycodeEscape kbd')) (titleScene renderer tmap smap kbd carte i)
+  -}
+
+
+gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> Int -> IO ()
+gameLoop frameRate renderer tmap smap kbd gameState@(M.Title carte) cpt = do
+  startTime <- time
+  events <- pollEvents  
+  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
+  let kbd' = refresh events kbd
+  clear renderer
+  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
+  present renderer
+  unless (quit || (K.keypressed KeycodeEscape kbd')) $ do
+    if (K.keypressed KeycodeReturn kbd') 
+      then (gameLoop frameRate renderer tmap smap K.createKeyboard (M.initGameState carte) cpt)  
+      else (gameLoop frameRate renderer tmap smap K.createKeyboard gameState cpt)
+
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o _ carte) cpt = do
+  startTime <- time
+  events <- pollEvents  
+  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
+  let kbd' = refresh events kbd
+  clear renderer
 
   affichageMap  x y (Map.toList (Carte.carte_contenu carte)) renderer tmap smap
   affichagePerso x y e renderer tmap smap 
@@ -163,7 +200,8 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o 
   let deltaTime = endTime - startTime
   -- putStrLn $ "Delta time: " <> (show (deltaTime * 1000)) <> " (ms)"
   -- putStrLn $ "Frame rate: " <> (show (1 / deltaTime)) <> " (frame/s)"
+
   --- update du game state
   let gameState'' = M.gameStep gameState' kbd' deltaTime
-  
   unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap K.createKeyboard gameState'' ((cpt+1) `mod` 10))
+  
