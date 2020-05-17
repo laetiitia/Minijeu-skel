@@ -141,29 +141,6 @@ refresh events kbd = K.handleEvent (head events) kbd
 ------------------------------------------
 ---------------- GAMELOOP------------------
 -------------------------------------------
-{-}
-titleScene :: Renderer -> TextureMap -> SpriteMap -> Keyboard -> Carte.Carte -> Int -> IO ()
-titleScene renderer tmap smap kbd carte i = do
-  startTime <- time
-  events <- pollEvents  
-  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
-  let kbd' = refresh events kbd
-  clear renderer
-
-  let carte2 = case i of 
-                0 -> "T========T\n|        |\n|        |\n|        |\n|        |\n|        |\n|        |\n=========="
-                1 -> "wrong"
-
-  putStrLn $ carte2
-
-  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "background") smap)
-  present renderer
-  when (K.keypressed KeycodeReturn kbd') (gameLoop 10 renderer tmap smap kbd' (M.initGameState carte) 0)
-
-  unless (quit || (K.keypressed KeycodeEscape kbd')) (titleScene renderer tmap smap kbd carte i)
-  -}
-
-
 gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> Int -> IO ()
 gameLoop frameRate renderer tmap smap kbd gameState@(M.Title carte) cpt = do
   startTime <- time
