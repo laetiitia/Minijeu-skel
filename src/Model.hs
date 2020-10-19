@@ -25,30 +25,36 @@ import Debug.Trace as T
 
 
 data GameState = 
-    Title {carte :: Carte}
+    Title {file :: String}
+    | Victory
+    | Bug {message :: String}
+    | End { num :: Int
+            , scene :: String
+            , cpt :: Int}
     |GameState { persoX :: Int
                 , persoY :: Int
                 , epee :: Bool
                 , clef :: Bool
                 , speed :: Int 
-                , monstres :: [Mst.Monstre] --Liste des monstres du gamestate
-                , items :: (M.Map Coord Item) --Emplacement des Items
-                , initCarte :: Carte --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
-                , carte :: Carte --Carte courante du gamestate
+                , monstres :: [Mst.Monstre]     --Liste des monstres du gamestate
+                , items :: (M.Map Coord Item)   --Emplacement des Items
+                , initCarte :: (Carte,Int,Bool) --CarteInitiale dans le cas ou on reset celle-ci sera récupérer
+                , carte :: Carte                --Carte courante du gamestate
                 }
 
 ---- INVARIANTS GAMESTATE ----
 
 -- Verifie que:
 -- Les cartes soient valides
--- Les equiments soient à False et que la vitesse soit superieure à 0
+-- La vitesse soit superieure à 0
 prop_inv_GameState :: GameState -> Bool
-prop_inv_GameState (GameState px py epee clef sp monstres items icarte c@(C.Carte l h cont)) =  (not epee) && (not clef) && sp>=0 &&
- (prop_inv_Perso px py c) && (C.prop_inv_Carte icarte) && (C.prop_inv_Carte c) && (prop_inv_Monsters monstres) && (prop_inv_Items items l h)
+prop_inv_GameState (GameState px py epee clef sp monstres items (init,n,_) c@(C.Carte l h start cont)) = sp>=0 && (prop_inv_Perso px py c) &&  (C.prop_inv_Carte init) && (C.prop_inv_Carte c) && (prop_inv_Monsters monstres) && (prop_inv_Items items l h) && (n>=0)
+prop_inv_GameState (End num scene cpt) = (num >= 0) 
+prop_inc_GameState _ = True
 
 -- Verifie que: Les coordonnées du personnage soit bien comprise dans la carte
 prop_inv_Perso :: Int -> Int -> Carte -> Bool
-prop_inv_Perso px py (C.Carte larg haut contenu) = px >= 0 && py >= 0 && px <= larg && py <= haut && ((mod px 50) == 0) &&((mod py 50) == 0)
+prop_inv_Perso px py (C.Carte larg haut start contenu) = px >= 0 && py >= 0 && px <= larg && py <= haut && ((mod px 50) == 0) &&((mod py 50) == 0)
 
 
 -- Verifie que: Les monstres soient valides
@@ -64,16 +70,17 @@ prop_inv_Items items l h = let list =  M.foldrWithKey checkItem [] items in C.li
 -------------------------------------------
 
 -- Initialise l'état du jeu
-initGameState :: Carte -> GameState
-initGameState carte = GameState 350 250 False False 50 (Mst.initMonstres [((250,250),"Orc"),((1150,500),"Skeleton"),((50,50),"Fantome")]) (I.initItems [("epee",(200,200)),("clef",(300,300))]) carte carte
+createGameState :: String -> Int -> GameState
+createGameState file niveau = let carte@(C.Carte _ _ (C.C x y) _) = C.readCarte file in  GameState x y False False 50 (Mst.readCarte file) (I.readCarte file) (carte,niveau,False) carte
 
--- PreCondition initGameState: la carte doit etre valide
-prop_pre_InitGameState :: Carte -> Bool
-prop_pre_InitGameState carte = C.prop_inv_Carte carte
+-- PreCondition createGameState: la carte doit etre valide
+prop_pre_createGameState :: String -> Int -> Bool
+prop_pre_createGameState "" _ = False 
+prop_pre_createGameState _  niveau = niveau >= 0
 
--- PostCondition initGameState: verifie que le gamestate est valide (invariant)
-prop_post_InitGameState :: Carte -> Bool
-prop_post_InitGameState carte = let gs = initGameState carte in prop_inv_GameState gs
+-- PostCondition create GameState: verifie que le gamestate est valide (invariant)
+prop_post_createGameState :: String -> Int  -> Bool
+prop_post_createGameState file niveau = let gs = createGameState file niveau in prop_inv_GameState gs
 
 
 
@@ -88,7 +95,7 @@ moveLeft gs@(GameState px py _ _ sp _ _ _ carte) | px > 0 && (C.caseAccesible (p
 
 -- Deplace le perso vers la droite
 moveRight :: GameState -> GameState
-moveRight gs@(GameState px py _  _ sp _ _ _ (C.Carte l h map)) | px < l && (C.caseAccesible (px + sp) py (C.Carte l h map))= gs { persoX = px + sp }
+moveRight gs@(GameState px py _  _ sp _ _ _ (C.Carte l h start map)) | px < l && (C.caseAccesible (px + sp) py (C.Carte l h start map))= gs { persoX = px + sp }
                                  | otherwise = gs
 
 -- Deplace le perso vers le haut                           
@@ -98,13 +105,14 @@ moveUp gs@(GameState px py _ _ sp _ _ _ carte) | py > 0 && (C.caseAccesible px (
 
 -- Deplace le perso vers le bas
 moveDown :: GameState -> GameState
-moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h map)) | py < h && (C.caseAccesible px (py + sp) (C.Carte l h map)) = gs { persoY = py + sp }
+moveDown gs@(GameState px py _ _ sp _ _ _ (C.Carte l h start map)) | py < h && (C.caseAccesible px (py + sp) (C.Carte l h start map)) = gs { persoY = py + sp }
                                 | otherwise = gs
 
 
 -- PreCondition move_ : Les coordonnées du personnage doit etre comprise dans la carte et la vitesse est un entier positif
 prop_pre_move :: GameState -> Bool
-prop_pre_move gs = prop_inv_GameState gs
+prop_pre_move gs@(GameState _ _ _ _ _ _ _ _ _) = prop_inv_GameState gs
+prop_pre_move _  = False
 
 -- PostCondition move_ : verifie que le gamestate soit valide selon l'action du move
 prop_post_move :: GameState -> String -> Bool
@@ -120,51 +128,76 @@ prop_post_move gs dir = case dir of
 -- *** AUTRE DELACEMENT *** --
 ------------------------------
 
+-- Filtre les monstres qui se déplacent vers une case non vide ou si un monstre est a la meme position qu'un autre monstre
+-- Cela ne s'applique pas pour les fantomes (m1 etant les nouvelles coordonnées des monstres et m2 les anciennes)
+filterMonsters :: [Mst.Monstre] -> [Mst.Monstre] -> C.Carte -> [C.Coord] -> [Mst.Monstre]
+filterMonsters [] [] _ _ = []
+filterMonsters [] ms _ _ = ms
+filterMonsters ms [] _ _ = ms
+filterMonsters ( m1@(Mst.Monster esp (C.C x y) dir cpt aff):ms1) ( m2@(Mst.Monster _ c _ _ _):ms2) carte@(C.Carte _ _ _ contenu) acc = case esp of
+    Mst.Fantome -> m1 : (filterMonsters ms1 ms2 carte ((C.C x y):acc))
+    otherwise -> if (C.caseAccesible x y carte) && (not (foldr (||) False (fmap (\val -> val == (C.C x y)) acc))) 
+                    then m1 : (filterMonsters ms1 ms2 carte ((C.C x y):acc)) 
+                    else (Mst.Monster esp c dir cpt aff) : (filterMonsters ms1 ms2 carte ((C.C x y):acc) )
+
+
 -- Deplace les monstres lorsque le compteurs est à 0
 moveMonsters :: Int -> GameState -> GameState
-moveMonsters 0 gs@(GameState _ _ _ _ _ ms _ _ _) = gs { monstres = (fmap Mst.moveMonster ms)}
+moveMonsters 0 gs@(GameState _ _ _ _ _ ms _ _ carte) = gs { monstres = (filterMonsters (fmap Mst.moveMonster ms) ms carte [])}
 moveMonsters _ gs = gs
 
 -- PreCondition moveMonsters : le gamestate doit etre valide
 prop_pre_moveMonsters :: Int -> GameState -> Bool
-prop_pre_moveMonsters _ gs = prop_inv_GameState gs
+prop_pre_moveMonsters i gs@(GameState _ _ _ _ _ _ _ _ _) = (prop_inv_GameState gs) && i >= 0
+prop_pre_moveMonsters _ _ = False
 
 -- PostCondition moveMonsters : le gamestate doit etre valide
 prop_post_moveMonsters :: Int -> GameState -> Bool
 prop_post_moveMonsters cpt gs = prop_inv_GameState (moveMonsters cpt gs)
 
 
-------------------------------
+-------------------------------
 -- *** MODIFICATION ETAT *** --
-------------------------------
+--------------------------------
+changeLevel :: (Carte,Int,Bool) -> (Carte,Int,Bool)
+changeLevel (carte,num,b) = (carte,num,True)
 
+
+-- Equipe le heros des items se trouvant sur mla meme case que lui
 changeItems :: GameState -> GameState
-changeItems gs@(GameState px py e c _ _ items _ _) | (I.isSword px py e items || I.isKey px py c items) = let (I.Item id aff) = M.findWithDefault (I.Item I.ErrorItem False) (C.C px py) items in case id of
+changeItems gs@(GameState px py e c _ _ items init _)  | (I.isSword px py e items || I.isKey px py c items) = let (I.Item id aff) = M.findWithDefault (I.Item I.ErrorItem False) (C.C px py) items in case id of
                                                                                                                                                     I.Epee -> let o = (I.changeItems (C.C px py) I.Epee items) in gs { epee = True, items = o }
                                                                                                                                                     I.Clef -> let o = (I.changeItems (C.C px py) I.Clef items) in gs { clef = True, items = o }
                                                                                                                                                     otherwise -> gs
-                                            |otherwise = gs
+                                                    | (I.isEscape px py items) = gs{initCarte = (changeLevel init)}
+                                                    | (I.isTresor px py items) = End 0 "" 0
+                                                    |otherwise = gs
 
 -- PreCondition changeItems : le gamestate doit etre valide
 prop_pre_changeItems :: GameState -> Bool
-prop_pre_changeItems gs = prop_inv_GameState gs
+prop_pre_changeItems gs@(GameState _ _ _ _ _ _ _ _ _) = prop_inv_GameState gs
+prop_pre_changeItems _ = False
 
 -- PostCondition changeItems : le gamestate doit etre valide
 prop_post_changeItems :: GameState -> Bool
 prop_post_changeItems gs = prop_inv_GameState (changeItems gs)
 
+resetLevel :: Carte -> [Mst.Monstre] -> (M.Map Coord Item) -> Int -> GameState
+resetLevel carte@(C.Carte _ _ (C.C x y) _) monstres items niveau = GameState x y False False 50 (Mst.reset monstres) (I.reset items) (carte,niveau,False) carte
 
 
 -- S'il y a une collision avec un des monstres alors celui-ci sera éliminé si le personnage a une épée
 changeMonstres :: GameState -> GameState
 changeMonstres gs@(GameState px py True _ _ monstres _ _ _) | Mst.collisionMonstres px py monstres = let m = (Mst.elimineMonstres px py monstres) in gs { monstres = m, epee = False }
                                                             | otherwise = gs
-changeMonstres gs@(GameState px py False _ _ monstres _ ini _) | Mst.collisionMonstres px py monstres =  initGameState ini
+changeMonstres gs@(GameState px py False _ _ monstres items (init,niv,_) _) | Mst.collisionMonstres px py monstres =  resetLevel init monstres items niv
                                                                |otherwise = gs
+changeMonstres gs = gs
 
 -- PreCondition changeItems : le gamestate doit etre valide
 prop_pre_changeMonstres :: GameState -> Bool
-prop_pre_changeMonstres gs = prop_inv_GameState gs
+prop_pre_changeMonstres gs@(GameState _ _ _ _ _ _ _ _ _) = prop_inv_GameState gs
+prop_pre_changeMonstres _ = False
 
 -- PostCondition changeItems : le gamestate doit etre valide
 prop_post_changeMonstres :: GameState -> Bool
@@ -179,11 +212,13 @@ activePorte gs = gs
 
 -- PreCondition activePorte : le gamestate doit etre valide
 prop_pre_activePorte :: GameState -> Bool
-prop_pre_activePorte gs = prop_inv_GameState gs
+prop_pre_activePorte gs@(GameState _ _ _ _ _ _ _ _ _) = prop_inv_GameState gs
+prop_pre_activePorte _ = False
 
 -- PostCondition changeItems : le gamestate doit etre valide
 prop_post_activePorte :: GameState -> Bool
 prop_post_activePorte gs = prop_inv_GameState (activePorte gs)
+
 
 
 

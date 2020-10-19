@@ -2,7 +2,10 @@
 module Main where
 
 import Control.Monad (unless, when)
+import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
+import Control.Exception (try)
+import GHC.IO.Exception (IOException(..))
 
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -40,11 +43,26 @@ import qualified Monster as Mst
 import Items (Item)
 import qualified Items as I
 
-import Carte (Carte)
-import Carte (Coord)
+import Carte (Carte, Coord)
 import qualified Carte as Carte
 
-import qualified LoadSprite as LS
+
+
+------------- LoadSprite --------------
+
+loadScene :: String -> Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadScene scene rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId scene) tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId scene) (S.mkArea 0 0 800 500)
+  let smap' = SM.addSprite (SpriteId scene) sprite smap
+  return (tmap', smap')
+
+loadSprite :: String -> Renderer-> FilePath -> TextureMap -> SpriteMap -> IO (TextureMap, SpriteMap)
+loadSprite spr rdr path tmap smap = do
+  tmap' <- TM.loadTexture rdr path (TextureId spr) tmap
+  let sprite = S.defaultScale $ S.addImage S.createEmptySprite $ S.createImage (TextureId spr) (S.mkArea 0 0 50 50)
+  let smap' = SM.addSprite (SpriteId spr) sprite smap
+  return (tmap', smap')
 
 
 
@@ -59,32 +77,40 @@ main = do
   renderer <- createRenderer window (-1) defaultRenderer
 
   -- chargement des sprites
-  (tmap, smap) <- LS.loadBackground renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
-  (tmap1, smap1) <- LS.loadPerso renderer "assets/perso.png" tmap smap
-  (tmap2, smap2) <- LS.loadangleT renderer "assets/texture/angleT.png" tmap1 smap1
-  (tmap3, smap3) <- LS.loadSol renderer "assets/texture/sol.png" tmap2 smap2
-  (tmap4, smap4) <- LS.loadHorizontal renderer "assets/texture/Horizontal.png" tmap3 smap3
-  (tmap5, smap5) <- LS.loadVertical renderer "assets/texture/Vertical.png" tmap4 smap4
-  (tmap6, smap6) <- LS.loadPorteEO renderer "assets/texture/porteEO.png" tmap5 smap5
-  (tmap7, smap7) <- LS.loadPorteNS renderer "assets/texture/porteNS.png" tmap6 smap6
-  (tmap8, smap8) <- LS.loadOrc renderer "assets/orc.png" tmap7 smap7
-  (tmap9, smap9) <- LS.loadPerso2 renderer "assets/perso2.png" tmap8 smap8
-  (tmap10, smap10) <- LS.loadEpee renderer "assets/epee.png" tmap9 smap9
-  (tmap11, smap11) <- LS.loadClef renderer "assets/clef.jpg" tmap10 smap10
-  (tmap12, smap12) <- LS.loadSkeleton renderer "assets/skeleton.png" tmap11 smap11
-  (tmap13, smap13) <- LS.loadFantome renderer "assets/fantome.png" tmap12 smap12
-  (tmap14, smap14) <- LS.loadTresor renderer "assets/tresor.png" tmap13 smap13
+  (tmap, smap) <- loadScene "background" renderer "assets/background.png" TM.createTextureMap SM.createSpriteMap
+  (tmap0, smap0) <- loadScene "endScene" renderer "assets/endScene.png" tmap smap
+  (tmap1, smap1) <- loadSprite "perso" renderer "assets/perso.png" tmap0 smap0
+  (tmap2, smap2) <- loadSprite "angleT" renderer "assets/textures/angleT.png" tmap1 smap1
+  (tmap3, smap3) <- loadSprite "sol" renderer "assets/textures/sol.png" tmap2 smap2
+  (tmap4, smap4) <- loadSprite "Horizontal" renderer "assets/textures/Horizontal.png" tmap3 smap3
+  (tmap5, smap5) <- loadSprite "Vertical" renderer "assets/textures/Vertical.png" tmap4 smap4
+  (tmap6, smap6) <- loadSprite "PorteEO" renderer "assets/textures/porteEO.png" tmap5 smap5
+  (tmap7, smap7) <- loadSprite "PorteNS" renderer "assets/textures/porteNS.png" tmap6 smap6
+  (tmap8, smap8) <- loadSprite "Orc" renderer "assets/monsters/orc.png" tmap7 smap7
+  (tmap9, smap9) <- loadSprite "perso2" renderer "assets/perso2.png" tmap8 smap8
+  (tmap10, smap10) <- loadSprite "epee" renderer "assets/items/epee.png" tmap9 smap9
+  (tmap11, smap11) <- loadSprite "clef" renderer "assets/items/clef.png" tmap10 smap10
+  (tmap12, smap12) <- loadSprite "Skeleton" renderer "assets/monsters/skeleton.png" tmap11 smap11
+  (tmap13, smap13) <- loadSprite "Fantome" renderer "assets/monsters/fantome.png" tmap12 smap12
+  (tmap14, smap14) <- loadSprite "tresor" renderer "assets/items/tresor.png" tmap13 smap13
+  (tmap15, smap15) <- loadSprite "escalier" renderer "assets/items/staircase.png" tmap14 smap14
+  (tmap16, smap16) <- loadScene "bug" renderer "assets/bug.jpg" tmap15 smap15
+  (tmap17, smap17) <- loadScene "Scene_0" renderer "assets/Scene_0.jpg" tmap16 smap16
+  (tmap18, smap18) <- loadSprite "Demon" renderer "assets/monsters/demon.png" tmap17 smap17
+  (tmap19, smap19) <- loadSprite "Undead" renderer "assets/monsters/undead.png" tmap18 smap18
+  (tmap20, smap20) <- loadScene "Scene_1" renderer "assets/Scene_1.jpg" tmap19 smap19
+  (tmap21, smap21) <- loadScene "Scene_2" renderer "assets/Scene_2.jpg" tmap20 smap20
+  (tmap22, smap22) <- loadScene "Scene_3" renderer "assets/Scene_3.jpg" tmap21 smap21
+  (tmap23, smap23) <- loadScene "Scene_4" renderer "assets/Scene_4.png" tmap22 smap22
+  (tmap24, smap24) <- loadScene "Scene" renderer "assets/Scene.jpg" tmap23 smap23
 
-  -- initialisation de l'état du jeu
-  -- let gameState = M.initGameState
-
-  map <- readFile "assets/defaultMap.txt"
-  let carte = Carte.readCarte map
+  file <- readFile "assets/monde0.txt"
+  
 
   -- initialisation de l'état du clavier
   let kbd = K.createKeyboard
   -- lancement de la gameLoop
-  gameLoop 10 renderer tmap14 smap14 kbd (M.Title carte) 0
+  gameLoop 10 renderer tmap24 smap24 kbd (M.Title file) 0
   SDL.destroyWindow window
   SDL.quit
 
@@ -141,8 +167,9 @@ refresh events kbd = K.handleEvent (head events) kbd
 ------------------------------------------
 ---------------- GAMELOOP------------------
 -------------------------------------------
-gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState -> Int -> IO ()
-gameLoop frameRate renderer tmap smap kbd gameState@(M.Title carte) cpt = do
+
+gameLoop :: (RealFrac a, Show a) => a -> Renderer -> TextureMap -> SpriteMap -> Keyboard -> GameState ->Int -> IO ()
+gameLoop frameRate renderer tmap smap kbd gameState@(M.Title file) cpt = do  -- TITLE SCENE
   startTime <- time
   events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
@@ -152,10 +179,10 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.Title carte) cpt = do
   present renderer
   unless (quit || (K.keypressed KeycodeEscape kbd')) $ do
     if (K.keypressed KeycodeReturn kbd') 
-      then (gameLoop frameRate renderer tmap smap K.createKeyboard (M.initGameState carte) cpt)  
+      then (gameLoop frameRate renderer tmap smap K.createKeyboard (M.createGameState file 0) cpt)  
       else (gameLoop frameRate renderer tmap smap K.createKeyboard gameState cpt)
 
-gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o _ carte) cpt = do
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o (_,n,False) carte) cpt= do -- GAMESTATE SCENE
   startTime <- time
   events <- pollEvents  
   let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
@@ -175,10 +202,46 @@ gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState x y e c sp m o 
   threadDelay $ delayTime * 1000 -- microseconds
   endTime <- time
   let deltaTime = endTime - startTime
-  -- putStrLn $ "Delta time: " <> (show (deltaTime * 1000)) <> " (ms)"
-  -- putStrLn $ "Frame rate: " <> (show (1 / deltaTime)) <> " (frame/s)"
 
   --- update du game state
   let gameState'' = M.gameStep gameState' kbd' deltaTime
   unless (quit || (K.keypressed KeycodeEscape kbd')) (gameLoop frameRate renderer tmap smap K.createKeyboard gameState'' ((cpt+1) `mod` 10))
-  
+
+-- Changement de niveau 
+gameLoop frameRate renderer tmap smap kbd gameState@(M.GameState _ _ _ _ _ _ _ (_,n,True) _) cpt = do -- NEXT LEVEL UPLOAD
+  putStrLn ("assets/monde"++(show (n+1)) ++".txt") 
+  file <- liftIO $ try $ readFile ("assets/monde"++(show (n+1)) ++".txt")
+  case file :: Either IOException String of 
+    Left exception -> gameLoop frameRate renderer tmap smap kbd (M.Bug "ERROR: Fichier du prochain niveau non trouvé.") cpt
+    Right contents -> (do if (Carte.prop_post_readCarte contents)
+                              then gameLoop frameRate renderer tmap smap kbd (M.createGameState contents (n+1)) (cpt+1) 
+                              else gameLoop frameRate renderer tmap smap kbd (M.Bug "ERROR: Carte du niveau suivant incorrect.") cpt)
+    
+gameLoop frameRate renderer tmap smap kbd (M.Bug message) cpt = do  -- BUG SCENE
+  startTime <- time
+  events <- pollEvents  
+  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
+  let kbd' = refresh events kbd
+  clear renderer
+  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId "bug") smap)
+  putStrLn $ message
+  present renderer
+  unless (quit || (K.keypressed KeycodeEscape kbd')) $ gameLoop frameRate renderer tmap smap kbd (M.Bug message) cpt
+
+
+gameLoop frameRate renderer tmap smap kbd (M.End n s c) cpt = do  -- END SCENE
+  startTime <- time
+  events <- pollEvents  
+  let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
+  let kbd' = refresh events kbd
+  clear renderer
+  let (scene,res, sceneinit ) = S.scene c n s
+  S.displaySprite renderer tmap (SM.fetchSprite (SpriteId scene) smap)
+  endTime <- time
+  let refreshTime = endTime - startTime
+  let delayTime = floor (((1.0 / frameRate) - refreshTime) * 1000)
+  threadDelay $ delayTime * 1000 -- microseconds
+  endTime <- time
+  let deltaTime = endTime - startTime
+  present renderer
+  unless (quit || (K.keypressed KeycodeEscape kbd')) $ gameLoop frameRate renderer tmap smap kbd (M.End res sceneinit ((c+1) `mod` 35)) cpt

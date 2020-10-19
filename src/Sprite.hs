@@ -91,3 +91,15 @@ displaySprite rdr tmap sp@(Sprite imgs cur dest) =
       let txt = TM.fetchTexture tid tmap
       R.copy rdr txt Nothing (Just dest)
 
+
+-- Defile les images de fin du jeux
+scene :: Int -> Int -> String -> (String, Int, String)
+scene 0 i s= case i of  
+  0 -> ("Scene",(i+1),"Scene")
+  1 -> ("Scene_0",(i+1),"Scene_0")
+  2 -> ("Scene_1",(i+1),"Scene_1")
+  3 -> ("Scene_2",(i+1),"Scene_2")
+  4 -> ("Scene_3",(i+1),"Scene_3")
+  5 -> ("Scene_4",(i+1),"Scene_4")
+  otherwise -> ("endScene",(i+1),"endScene")
+scene x i s= (s,i,s)

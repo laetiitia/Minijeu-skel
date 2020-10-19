@@ -4,16 +4,29 @@ import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import Carte (Coord)
 import qualified Carte as C
+import Control.Monad.Trans.State
+import Control.Monad
+import qualified System.Random as R
 
 data Espece = 
     Orc
     | Skeleton
     | Fantome
+    | Demon
+    | Undead
+    deriving Eq
 
 data Monstre = Monster {espece :: Espece, coor :: Coord, direct :: Int, cpt :: Int, affichage :: Bool}
 
 
------ INVARIANTS MONSTRE -----
+instance Show Monstre where
+    show(Monster e (C.C x y) d cpt a ) =  ("espéce: " ++(especeToString e) ++" coord x: " ++ (show x) ++" coord y: " ++ (show y) ++"  direction: " ++ (show d) ++" compteur: " ++ (show cpt) ++" affichage: " ++ (show a))
+
+instance Show Espece where
+    show e = especeToString e
+
+
+---------- INVARIANTS MONSTRE ----------
 
 prop_inv_Monstre :: Monstre -> Bool
 prop_inv_Monstre m = (prop_inv_coord_monstre m) && (prop_inv_cpt_monstre m) && (prop_inv_direction_monstre m)
@@ -41,6 +54,8 @@ especeToString e = case e of
     Orc -> "Orc"
     Skeleton -> "Skeleton"
     Fantome -> "Fantome"
+    Demon -> "Demon"
+    Undead -> "Undead"
 
 -- Retourne l'Espece associé au string
 -- Remarque: verifié le string passé en argument avec la fonction 
@@ -50,7 +65,9 @@ stringToEspece str = case str of
     "Orc" -> Orc
     "Skeleton" -> Skeleton
     "Fantome" -> Fantome
-    otherwise -> Orc -- Espece retourné par defaut
+    "Demon" -> Demon
+    "Undead" -> Undead
+    otherwise -> Undead -- Espece retourné par defaut
 
 
 -- Verifie que le string soit bien assimilé à une Espece
@@ -59,6 +76,8 @@ stringIsEspece str = case str of
     "Orc" -> True
     "Skeleton" -> True
     "Fantome" -> True
+    "Demon" -> True
+    "Undead" -> True
     otherwise -> False 
 
 -- Permet de recuperer selon l'espece le nombre de deplacement
@@ -68,6 +87,8 @@ getCptInit e = case e of
     Orc -> 3
     Skeleton -> 2
     Fantome -> 5
+    Demon -> 3
+    otherwise -> 1 -- par defaut
 
 
 
@@ -78,10 +99,21 @@ getMonsterPattern esp =
         Orc -> ["Haut", "Droite", "Bas", "Gauche"]
         Skeleton -> ["Haut", "Bas"]
         Fantome -> ["Droite", "Bas", "Droite","Haut","Gauche", "Bas", "Gauche","Haut" ]
+        Demon -> ["Gauche","Droite"]
+        otherwise -> ["Haut", "Droite", "Bas", "Gauche"] -- par defaut
 
 -- Verifie que la liste des directions soit correcte 
 prop_post_getMonsterPattern :: Espece -> Bool
-prop_post_getMonsterPattern e = C.listAnd (fmap prop_pre_MoveToDir (getMonsterPattern e))
+prop_post_getMonsterPattern e = C.listAnd (fmap prop_pre_getMonsterPattern (getMonsterPattern e))
+
+prop_pre_getMonsterPattern ::String -> Bool
+prop_pre_getMonsterPattern str =
+    case str of 
+        "Haut" -> True
+        "Droite" -> True
+        "Gauche" -> True
+        "Bas" -> True
+        otherwise -> False
 
 
 
@@ -96,43 +128,68 @@ moveToDir str (C.C x y) =
         otherwise -> (C.C x y)
 
 -- Verifie que le string envoyer soit correcte
-prop_pre_MoveToDir ::String -> Bool
-prop_pre_MoveToDir str =
+prop_pre_MoveToDir ::String -> C.Coord -> Bool
+prop_pre_MoveToDir str (C.C cx cy) =
     case str of 
-        "Haut" -> True
-        "Droite" -> True
-        "Gauche" -> True
-        "Bas" -> True
+        "Haut" -> 0<=cx && 0 <= cy && ((mod cx 50) == 0) && ((mod cy 50) == 0)
+        "Droite" -> 0<=cx && 0 <= cy && ((mod cx 50) == 0) && ((mod cy 50) == 0)
+        "Gauche" -> 0<=cx && 0 <= cy && ((mod cx 50) == 0) && ((mod cy 50) == 0)
+        "Bas" -> 0<=cx && 0 <= cy && ((mod cx 50) == 0) && ((mod cy 50) == 0)
         otherwise -> False
 
 
-
+prop_post_MoveToDir :: C.Coord -> Bool 
+prop_post_MoveToDir (C.C cx cy) = 0<=cx && 0 <= cy && ((mod cx 50) == 0) && ((mod cy 50) == 0)
 
 ----- MONSTER FONCTIONS GENERAUX -----
 
 -- Initialise une liste de monstre selon les informations données ( Coordonnées du monstre, Type du Monstre  )
-initMonstres :: [((Int,Int),String)] -> [Monstre]
+initMonstres :: [(C.Coord, String)] -> [Monstre]
 initMonstres [] = []
-initMonstres (((x,y), id):xs) | (stringIsEspece id) = let e = (stringToEspece id) in (Monster e (C.C x y) 0 (getCptInit e) True): (initMonstres xs)
+initMonstres ((c, id):xs) | (stringIsEspece id) = let e = (stringToEspece id) in (Monster e c 0 (getCptInit e) True): (initMonstres xs)
                               | otherwise = (initMonstres xs)
 
 -- Verifie que les coordonnées soient des multiples de 50 et que le string corresponde à une Espece  
-prop_pre_initMonstres :: [((Int,Int),String)] -> Bool
+prop_pre_initMonstres :: [(C.Coord,String)] -> Bool
 prop_pre_initMonstres [] = True
-prop_pre_initMonstres (((x,y),id):xs)   | (stringIsEspece id) && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initMonstres xs
-                                        | otherwise = False 
+prop_pre_initMonstres (((C.C x y),id):xs)   | (stringIsEspece id) && ((mod x 50) == 0) && ((mod y 50) == 0) = prop_pre_initMonstres xs
+                                            | otherwise = False 
 
 -- Verifie que tout les monstres en sorties soient correctes 
-prop_post_initMonstres :: [((Int,Int),String)] -> Bool
+prop_post_initMonstres :: [(C.Coord,String)] -> Bool
 prop_post_initMonstres [] = True
 prop_post_initMonstres list = C.listAnd (fmap prop_inv_Monstre (initMonstres list))
+
+
+-- Reset les Monstre
+reset :: [Monstre] -> [Monstre]
+reset m = map (\(Monster m c i cpt a) -> (Monster m c i cpt True)) m
+
+
+----------- Arbitrary ------------
+type Gen a = State R.StdGen a
+
+class Arb a where 
+  arb :: Gen a
+
+instance Arb Int where
+  arb = state R.next
+
+generate :: Gen Int
+generate = liftM (`mod` 1000) arb
+
+-- Retourne une direction arbitraire, ici n est la somme des coordonées du monstre plus celle se son compteur
+getArbitraryDir :: Int -> String
+getArbitraryDir n = let index = mod (foldr (+) 0  (evalState (sequence (replicate 10 (generate))) (R.mkStdGen n))) 4 in ["Haut", "Bas", "Droite", "Gauche"]!!index
+
 
 
 
 
 -- Modifie les coordonnées du monstre selon son pattern
 moveMonster :: Monstre -> Monstre
-moveMonster mo@(Monster m (C.C x y) index cpt a) |( cpt == 0 && a) = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
+moveMonster mo@(Monster m (C.C x y) index cpt a)| (m == Undead) = (Monster m (moveToDir (getArbitraryDir (x + y + index)) (C.C x y)) (index+1) cpt a)
+                                                | (cpt == 0 && a) = (Monster m (C.C x y) ((index + 1) `mod` (length (getMonsterPattern m))) (getCptInit m)  a) 
                                                 | (cpt > 0 && a) = (Monster m (moveToDir ((getMonsterPattern m)!!index) (C.C x y) ) index (cpt-1) a)
                                                 | otherwise = mo
 
@@ -141,6 +198,7 @@ prop_pre_moveMonster :: Monstre -> Bool
 prop_pre_moveMonster monstre = prop_inv_Monstre monstre
 
 -- Postcondition moveMonstre: le monstre doit vérifié l'invariant en sortie de fonction
+prop_post_moveMonster::Monstre -> Bool
 prop_post_moveMonster monstre = prop_inv_Monstre (moveMonster monstre)
 
 
@@ -149,7 +207,7 @@ prop_post_moveMonster monstre = prop_inv_Monstre (moveMonster monstre)
 -- Elimine tout les monstres qui ont pour coordonnées ce passé en argument 
 elimineMonstres :: Int -> Int -> [Monstre] -> [Monstre]
 elimineMonstres px py [] = []
-elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| (px == x && py ==y) = ((Monster m (C.C x y) index cpt False):(elimineMonstres px py xs))
+elimineMonstres px py ((Monster m (C.C x y) index cpt a):xs)| (px == x && py == y) = ((Monster m (C.C x y) index cpt False):(elimineMonstres px py xs))
                                                             | otherwise = ((Monster m (C.C x y) index cpt a):(elimineMonstres px py xs))
 
 -- PreCondition elimineMonstres : verifie les coordonnées et que les monstres soient dans les normes 
@@ -177,25 +235,25 @@ prop_pre_collisionMonstres :: Int -> Int -> [Monstre] -> Bool
 prop_pre_collisionMonstres px py ms =  py>=0 && px>=0 && ((mod px 50) == 0) && ((mod py 50) == 0) && (C.listAnd (fmap prop_inv_Monstre ms) )
 
 
+-- Recupere les données du fichier texte pour initialiser la liste des monstres
+readCarte :: String -> [Monstre]
+readCarte [] = []
+readCarte txt = getMonsters  txt 0 0
+    where getMonsters  (x:xs) cx cy = (if xs == [] 
+                                    then []
+                                    else case x of
+                                            'o' -> (Monster Orc (C.C cx cy) 0 (getCptInit Orc) True) : (getMonsters  xs (cx+50) cy)
+                                            'f' -> (Monster Fantome (C.C cx cy) 0 (getCptInit Fantome) True) : (getMonsters  xs (cx+50) cy)
+                                            's' -> (Monster Skeleton (C.C cx cy) 0 (getCptInit Skeleton) True) : (getMonsters  xs (cx+50) cy)
+                                            'd' -> (Monster Demon (C.C cx cy) 0 (getCptInit Demon) True) : (getMonsters  xs (cx+50) cy)
+                                            'u' -> (Monster Undead (C.C cx cy) 0 (getCptInit Undead) True) : (getMonsters  xs (cx+50) cy)
+                                            '\n' -> getMonsters  xs 0 (cy+50) 
+                                            otherwise -> getMonsters  xs (cx+50) cy)
+
+-- PostCondition de readCarte: que la liste des montres soient corrects
+prop_post_readCarte :: String -> Bool
+prop_post_readCarte txt = C.listAnd $ fmap prop_inv_Monstre (readCarte txt)
 
 
 
 
---- ** Generate Monster ** ---
-{--chooseMonsters :: Int -> String
-chooseMonsters i =
-    case i of
-        1 -> "Orc"
-        2 -> "Fantome"
-        3 -> "Skeleton"
-        x -> "error"
-
-genMonstresOk :: Gen ((Int,Int),String)
-genMonstresOk = do
-    x <- choose(0,20)
-    y <- choose(0,20)
-    i <- choose(1,3)
-    return $ (((x*50),(y*50)),chooseMonsters i)
-
-prop_initMonstres_inv :: Property
-prop_initMonstres_inv = forAll genMonstresOk $ prop_MonstreValide--}

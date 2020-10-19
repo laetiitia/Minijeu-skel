@@ -69,19 +69,19 @@ changeItemsSpec = do
 initItemsSpec = do
     describe "Verifie initItems" $ do
         it "pre condition Type d'entré valide et coordonnée valide" $ do
-           I.prop_pre_initItems [("clef",(50,50)),("epee",(100,100)),("tresor",(150,150))]
+           I.prop_pre_initItems [("clef",(C.C 50 50)),("epee",(C.C 100 100)),("tresor",(C.C 150 150))]
            `shouldBe` True 
         it "pre condition Type d'entré valide et coordonnée invalide" $ do
-           I.prop_pre_initItems [("clef",(30,50)),("epee",(100,100)),("tresor",(150,150))]
+           I.prop_pre_initItems [("clef",(C.C 50 50)),("epee",(C.C 30 100)),("tresor",(C.C 150 150))]
            `shouldBe` False
         it "pre condition Type d'entré invalide et coordonnée valide" $ do
-           I.prop_pre_initItems [("bob",(50,50)),("epee",(100,100)),("tresor",(150,150))]
+           I.prop_pre_initItems [("bob",(C.C 50 50)),("epee",(C.C 100 100)),("tresor",(C.C 150 150))]
            `shouldBe` False
         it "pre condition Type d'entré invalide et coordonnée invalide" $ do
-           I.prop_pre_initItems [("clef",(30,50)),("bob",(100,100)),("tresor",(150,150))]
+           I.prop_pre_initItems [("clef",(C.C 30 50)),("bob",(C.C 100 100)),("tresor",(C.C 150 150))]
            `shouldBe` False
         it "post condition verification de l'invariant" $ do
-           I.prop_post_initItems (I.initItems [("clef",(50,50)),("epee",(100,100)),("tresor",(150,150))])
+           I.prop_post_initItems (I.initItems [("clef",(C.C 50 50)),("epee",(C.C 100 100)),("tresor",(C.C 150 150))])
            `shouldBe` True
         it "post condition sur résultat incohérant" $ do
            I.prop_post_initItems (M.fromList [((C.C 50 50),(I.Item I.Clef False)),((C.C 100 50),(I.Item I.ErrorItem False))])
@@ -95,60 +95,30 @@ invarianSpec = do
             I.prop_inv_ItemType (I.Item I.ErrorItem True)
             `shouldBe` False
 
+readSpec = do
+    describe "Verifie que la création des monstres via la lecture des cartes est correcte" $ do 
+        it "PostCondition de la lecture d'une carte vide" $ do
+            I.prop_post_readCarte " "
+            `shouldBe` True
+        it "PostCondition de la lecture d'une carte sans monstres" $ do
+            I.prop_post_readCarte "T===T\n|X  |\n====="
+            `shouldBe` True
+        it "PostCondition de la lecture d'une carte avec d'un item" $ do
+            I.prop_post_readCarte "T====T\n|X   |\n|    |\n|    |\n|  E |\n======"
+            `shouldBe` True
+        it "PostCondition de la lecture d'une carte avec des items" $ do
+            I.prop_post_readCarte "T====T\n|X e |\n|    |\n|  c |\n|  tE|\n======"
+            `shouldBe` True
+
 cFunSpec = do 
     isSwordSpec
     isKeySpec
     changeItemsSpec
     initItemsSpec
     invarianSpec
-
-{--
-genItemsOk ::Bool -> Gen I.Item
-genItemsOk b = do
-    i <- choose(1,4)
-    auxItem i b
-
-auxType :: Int -> String
-auxType i =
-    case i of
-        1 -> "epee"
-        2 -> "clef"
-        3 -> "tresor"
-        4 -> "ErrorItem"
-        x -> "bob"
-
-genTypeOk :: Gen (String,(Int,Int))
-genTypeOk = do
-    x <- choose(0,20)
-    y <- choose(0,20)
-    i <- choose(1,4)
-    return $ (auxType i, ((x*50),(y*50)))
+    readSpec
 
 
-typeToStringSpec = do
-    describe "verifie typeToString" $ do
-        it "epee" $ do
-            I.typeToString I.Epee 
-            `shouldBe` "epee"
-        it "clef" $ do
-            I.typeToString I.Clef 
-            `shouldBe` "clef"
-        it "tresor" $ do
-            I.typeToString I.Tresor 
-            `shouldBe` "tresor"
-        it "ErrorItem" $ do
-            I.typeToString I.ErrorItem
-            `shouldBe` "ErrorItem"
-
-
-prop_initItem_inv :: Property
-prop_initItem_inv = forAll genTypeOk $ I.propIdValide
-
-initSpeck = do
-    describe "verifie ques les entré sont valide" $ do
-        it "liste valide" $
-            property prop_initItem_inv 
---}
 
 
 
